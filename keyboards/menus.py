@@ -1,27 +1,43 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 def get_main_menu():
-    kb = ReplyKeyboardMarkup(resize_keyboard=True)
-    kb.add(KeyboardButton("📦 Купить прокси"), KeyboardButton("👤 Мои прокси"))
-    kb.add(KeyboardButton("⚙️ Настройки"))
-    return kb
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="📦 Купить прокси"), KeyboardButton(text="👤 Мои прокси")],
+            [KeyboardButton(text="⚙️ Настройки")]
+        ],
+        resize_keyboard=True
+    )
 
 def get_type_kb():
-    return ReplyKeyboardMarkup(resize_keyboard=True).add(
-        KeyboardButton("IPv4"), KeyboardButton("IPv6"), KeyboardButton("Mobile")
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="IPv4"), KeyboardButton(text="IPv6"), KeyboardButton(text="Mobile")]
+        ],
+        resize_keyboard=True
     )
 
 def get_country_kb():
-    return ReplyKeyboardMarkup(resize_keyboard=True).add(
-        KeyboardButton("Франция"), KeyboardButton("Германия"), KeyboardButton("США")
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="Франция"), KeyboardButton(text="Германия"), KeyboardButton(text="США")]
+        ],
+        resize_keyboard=True
     )
 
 def get_duration_kb():
-    return ReplyKeyboardMarkup(resize_keyboard=True).add(
-        KeyboardButton("1 день"), KeyboardButton("7 дней"), KeyboardButton("1 месяц"), KeyboardButton("3 месяца"), KeyboardButton("6 месяцев")
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="1 день"), KeyboardButton(text="7 дней")],
+            [KeyboardButton(text="1 месяц"), KeyboardButton(text="3 месяца"), KeyboardButton(text="6 месяцев")]
+        ],
+        resize_keyboard=True
     )
 
 def get_confirm_kb():
-    return ReplyKeyboardMarkup(resize_keyboard=True).add(
-        KeyboardButton("✅ Подтвердить"), KeyboardButton("❌ Отмена")
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="✅ Подтвердить"), KeyboardButton(text="❌ Отмена")]
+        ],
+        resize_keyboard=True
     )

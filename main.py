@@ -1,15 +1,23 @@
+import asyncio
 from aiogram import Bot, Dispatcher
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from aiogram.utils import executor
+from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
+
 from config import BOT_TOKEN
-import handlers.start
-import handlers.buy_proxy
+from handlers.start import router as start_router
+from handlers.buy_proxy import router as buy_proxy_router
 
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher(bot, storage=MemoryStorage())
+async def main():
+    bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    dp = Dispatcher(storage=MemoryStorage())
 
-handlers.start.register_handlers(dp)
-handlers.buy_proxy.register_handlers(dp)
+    # Подключаем роутеры
+    dp.include_router(start_router)
+    dp.include_router(buy_proxy_router)
 
-if __name__ == '__main__':
-    executor.start_polling(dp, skip_updates=True)
+    # Запуск бота
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())
