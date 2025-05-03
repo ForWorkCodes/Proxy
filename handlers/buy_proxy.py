@@ -1,61 +1,59 @@
-from aiogram import Router, types, F
+from aiogram import Router, F
+from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
-from aiogram.types import ReplyKeyboardRemove
-from states.buy_proxy import BuyProxyStates
-from keyboards.menus import get_type_kb, get_country_kb, get_duration_kb, get_confirm_kb, get_main_menu
+from states.buy_proxy import BuyProxy
+from keyboards.menus import (
+    proxy_type_keyboard, confirm_country_keyboard,
+    confirm_quantity_keyboard, payment_method_keyboard
+)
 
 router = Router()
 
-@router.message(F.text == "📦 Купить прокси")
-async def buy_proxy_start(message: types.Message, state: FSMContext):
-    await message.answer("Выберите тип прокси:", reply_markup=get_type_kb())
-    await state.set_state(BuyProxyStates.ChoosingType)
+@router.callback_query(F.data == "buy_proxy")
+async def buy_proxy(callback: CallbackQuery, state: FSMContext) -> None:
+    await state.set_state(BuyProxy.Type)
+    await callback.answer()
+    await callback.message.delete()
+    await callback.message.answer("Выберите тип прокси:", reply_markup=proxy_type_keyboard())
 
-@router.message(BuyProxyStates.ChoosingType)
-async def choose_type(message: types.Message, state: FSMContext):
-    print("choose_type")
-    await state.update_data(proxy_type=message.text)
-    await message.answer("Выберите страну:", reply_markup=get_country_kb())
-    await state.set_state(BuyProxyStates.ChoosingCountry)
+@router.callback_query(BuyProxy.Type, F.data.startswith("type_"))
+async def select_type(callback: CallbackQuery, state: FSMContext):
+    await state.update_data(proxy_type=callback.data.split("_")[1])
+    await state.set_state(BuyProxy.Country)
+    await callback.message.answer("Выберите страну (введите вручную):")
+    await callback.answer()
 
-@router.message(BuyProxyStates.ChoosingCountry)
-async def choose_duration(message: types.Message, state: FSMContext):
-    print("choose_duration")
+@router.message(BuyProxy.Country)
+async def select_country(message: Message, state: FSMContext):
     await state.update_data(country=message.text)
-    await message.answer("На какой срок:", reply_markup=get_duration_kb())
-    await state.set_state(BuyProxyStates.ChoosingDuration)
+    await state.set_state(BuyProxy.Quantity)
+    await message.answer("Введите количество прокси:")
 
-@router.message(BuyProxyStates.ChoosingDuration)
-async def choose_quantity(message: types.Message, state: FSMContext):
-    print("choose_quantity")
-    await state.update_data(duration=message.text)
-    await message.answer("Введите количество прокси:", reply_markup=ReplyKeyboardRemove())
-    await state.set_state(BuyProxyStates.ChoosingQuantity)
-
-@router.message(BuyProxyStates.ChoosingQuantity)
-async def choose_confirming(message: types.Message, state: FSMContext):
-    print("choose_confirming")
+@router.message(BuyProxy.Quantity)
+async def select_quantity(message: Message, state: FSMContext):
     await state.update_data(quantity=message.text)
-    data = await state.get_data()
+    # Здесь можно вставить проверку наличия
+    await state.set_state(BuyProxy.ConfirmAvailability)
+    await message.answer("Есть в наличии. Перейти к оплате?", reply_markup=confirm_quantity_keyboard())
 
-    summary = (
-        f"Вы выбрали:\n"
-        f"Тип: {data['proxy_type']}\n"
-        f"Страна: {data['country']}\n"
-        f"Срок: {data['duration']}\n"
-        f"Количество: {data['quantity']}\n\n"
-        f"Подтвердить заказ?"
-    )
-    await message.answer(summary, reply_markup=get_confirm_kb())
-    await state.set_state(BuyProxyStates.Confirming)
+@router.callback_query(BuyProxy.ConfirmAvailability, F.data == "pay_yes")
+async def confirm_payment(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(BuyProxy.PaymentChoice)
+    await callback.message.answer("Выберите способ оплаты:", reply_markup=payment_method_keyboard())
+    await callback.answer()
 
-@router.message(BuyProxyStates.Confirming, F.text == "✅ Подтвердить")
-async def choose_confirm(message: types.Message, state: FSMContext):
-    print("choose_confirm")
-    await message.answer("Ваш заказ принят в обработку. Спасибо:", reply_markup=get_main_menu())
+@router.callback_query(BuyProxy.PaymentChoice, F.data == "pay_balance")
+async def pay_with_balance(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(BuyProxy.PaymentProcess)
+    await callback.message.answer("Списываю с баланса...")
+
+    # Здесь должна быть логика оплаты
+    await state.set_state(BuyProxy.ProxyDelivery)
+    await callback.message.answer("Прокси выданы:\nIP:PORT:USER:PASS")
+    await callback.answer()
+
+@router.callback_query(BuyProxy.ConfirmAvailability, F.data == "pay_cancel")
+async def cancel_payment(callback: CallbackQuery, state: FSMContext):
     await state.clear()
-
-@router.message(BuyProxyStates.Confirming, F.text == "❌ Отмена")
-async def choose_cancel(message: types.Message, state: FSMContext):
-    await message.answer("Заказ отменён.", reply_markup=get_main_menu())
-    await state.clear()
+    await callback.message.answer("Покупка отменена.")
+    await callback.answer()

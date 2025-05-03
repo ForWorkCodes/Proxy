@@ -4,3 +4,4 @@ import os
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+POSTGRES_DSN = os.getenv("POSTGRES_DSN")
