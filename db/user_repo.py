@@ -1,5 +1,10 @@
 from asyncpg import Pool
 
+async def get_user_by_id(user_id: int, db: Pool) -> dict | None:
+    async with db.acquire() as conn:
+        row = await conn.fetchrow("SELECT * FROM users_telegram WHERE user_id = $1", user_id)
+        return row if row else None
+
 async def get_user_language(user_id: int, db: Pool) -> str | None:
     async with db.acquire() as conn:
         row = await conn.fetchrow("SELECT language FROM users_telegram WHERE user_id = $1", user_id)

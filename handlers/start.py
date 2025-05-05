@@ -1,19 +1,31 @@
 from aiogram import Router
 from aiogram.filters import CommandStart
 from aiogram.types import Message
+from aiogram.fsm.context import FSMContext
 from keyboards.menus import get_main_menu, get_start_menu
-from utils.i18n import resolve_language
-from services.user_service import get_or_create_user
+from services.user_service import create_user
 from asyncpg import Pool
+from data.locales import get_text
+from aiogram.filters import StateFilter
 
 router = Router()
 
 @router.message(CommandStart())
-async def command_start_handler(message: Message, db_pool: Pool) -> None:
-    lang = await get_or_create_user(message, db_pool)
-    await message.answer(f"Hello, <b>{message.from_user.full_name}!</b>", reply_markup=get_main_menu()  )
+async def command_start_handler(message: Message, state: FSMContext, db_pool: Pool) -> None:
+    await create_user(message, db_pool, state)
+    first_hello = await get_text(state, 'first_hello')
+    menu = await get_main_menu(state)
+    await message.answer(f"{first_hello}, <b>{message.from_user.full_name}!</b>", reply_markup=menu  )
 
-@router.message()
-async def fallback(message: Message, db_pool: Pool) -> None:
-    lang = await get_or_create_user(message, db_pool)
-    await message.answer("Я не понимаю. Выберите пункт из меню.", reply_markup=get_start_menu())
+@router.message(StateFilter(None))
+async def main_menu_handler(message: Message, state: FSMContext, db_pool: Pool):
+    await create_user(message, db_pool, state)
+    expected_main_menu_text = await get_text(state, 'main_menu_btn')
+    if message.text.strip().lower() == expected_main_menu_text.lower():
+        menu = await get_main_menu(state)
+        menu_title = await get_text(state, 'menu_title')
+        await message.answer(menu_title, reply_markup=menu)
+    else:
+        wrong_message = await get_text(state, 'wrong_message')
+        menu = await get_start_menu(state)
+        await message.answer(wrong_message, reply_markup=menu)

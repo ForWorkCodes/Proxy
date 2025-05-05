@@ -10,7 +10,8 @@ from config import BOT_TOKEN, POSTGRES_DSN
 from handlers.start import router as start_router
 from handlers.buy_proxy import router as buy_proxy_router
 from handlers.settings import router as settings_router
-
+from handlers.profile import router as profile_router
+from handlers.checker import router as checker_router
 db_pool = None
 
 async def main():
@@ -22,7 +23,7 @@ async def main():
     dp = Dispatcher(storage=MemoryStorage())
 
     # Подключаем роутеры
-    dp.include_routers(start_router, buy_proxy_router, settings_router)
+    dp.include_routers(start_router, buy_proxy_router, settings_router, profile_router, checker_router)
 
     # Подключение к базе данных
     db_pool = await asyncpg.create_pool(

@@ -1,28 +1,32 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
-from data.locales import texts
+from aiogram.fsm.context import FSMContext
+from data.locales import get_texts, get_text
 
-def get_start_menu():
+async def get_start_menu(state: FSMContext):
+    main_menu_text = await get_text(state, 'main_menu_btn')
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="/start")]
+            [KeyboardButton(text=main_menu_text)]
         ],
         resize_keyboard=True
     )
 
-def get_main_menu():
+async def get_main_menu(state: FSMContext):
+    texts = await get_texts(state)
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Купить прокси", callback_data="buy_proxy")],
-        [InlineKeyboardButton(text="Мои прокси", callback_data="my_proxy")],
-        [InlineKeyboardButton(text="Баланс", callback_data="my_balance")],
-        [InlineKeyboardButton(text="Чекер", callback_data="checker")],
-        [InlineKeyboardButton(text="Настройки", callback_data="my_settings")],
+        [InlineKeyboardButton(text=texts['buy_proxy'], callback_data="buy_proxy")],
+        [InlineKeyboardButton(text=texts['my_proxy'], callback_data="my_proxy")],
+        [InlineKeyboardButton(text=texts['balance'], callback_data="my_balance")],
+        [InlineKeyboardButton(text=texts['checker'], callback_data="checker")],
+        [InlineKeyboardButton(text=texts['settings'], callback_data="my_settings")],
     ])
 
 # Клавиатура для настроек
-def get_settings_menu():
+async def get_settings_menu(state: FSMContext):
+    texts = await get_texts(state)
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Язык", callback_data="change_language")],
-        [InlineKeyboardButton(text="Уведомления", callback_data="change_notifications")],
+        [InlineKeyboardButton(text=texts['language'], callback_data="change_language")],
+        [InlineKeyboardButton(text=texts['notifications'], callback_data="change_notifications")],
     ])
 
 def get_language_menu():
@@ -31,15 +35,31 @@ def get_language_menu():
         [InlineKeyboardButton(text="English", callback_data="change_language_en")]
     ])
 
-def get_notifications_menu():
+async def get_notifications_menu(state: FSMContext):
+    texts = await get_texts(state)
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Смс о продлении", callback_data="menu_sms_notification")]
+        [InlineKeyboardButton(text=texts["sms_renewal"], callback_data="menu_sms_notification")]
     ])
 
-def get_menu_sms_notification():
+async def get_menu_sms_notification(state: FSMContext):
+    texts = await get_texts(state)
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Да", callback_data="enable_sms_notification")],
-        [InlineKeyboardButton(text="Нет", callback_data="disable_sms_notification")]
+        [InlineKeyboardButton(text=texts["Yes"], callback_data="enable_sms_notification")],
+        [InlineKeyboardButton(text=texts["No"], callback_data="disable_sms_notification")]
+    ])
+
+# Клавиатура для баланса
+async def get_balance_menu(state: FSMContext):
+    texts = await get_texts(state)
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=texts["top_up_balance"], callback_data="top_up_balance_menu")]
+    ])
+
+async def get_top_up_balance_menu(state: FSMContext):
+    texts = await get_texts(state)
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=texts["spb"], callback_data="spb_top_up")],
+        [InlineKeyboardButton(text=texts["krypto"], callback_data="krypto_top_up")],
     ])
 
 # Клавиатуры для выбора типа прокси
