@@ -33,7 +33,12 @@ texts = {
         "deducting_from_balance": "Списываю с баланса...",
         "proxy_delivered": "Прокси выданы:\nIP:PORT:USER:PASS",
         "purchase_cancelled": "Покупка отменена.",
-        "choose": "Выбери"
+        "choose": "Выбери",
+        "test_add_proxy": "Тестовое добавление прокси",
+        "buy_proxy?": "Купить прокси?",
+        "empty_proxy_text": "У вас нет прокси",
+        "download_proxies": "Скачать",
+        "proxy:": "Прокси:"
     },
     "en": {
         "Yes": "Yes",
@@ -67,7 +72,12 @@ texts = {
         "deducting_from_balance": "Deducting from balance...",
         "proxy_delivered": "Proxies delivered:\nIP:PORT:USER:PASS",
         "purchase_cancelled": "Purchase cancelled.",
-        "choose": "Choose"
+        "choose": "Choose",
+        "test_add_proxy": "Test add proxy",
+        "buy_proxy?": "Buy proxy?",
+        "empty_proxy_text": "You have no proxies",
+        "download_proxies": "Download",
+        "proxy:": "Proxy:"
     }
 }
 

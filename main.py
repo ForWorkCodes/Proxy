@@ -12,7 +12,7 @@ from handlers.buy_proxy import router as buy_proxy_router
 from handlers.settings import router as settings_router
 from handlers.profile import router as profile_router
 from handlers.checker import router as checker_router
-
+from handlers.my_proxy import router as my_proxy_router
 from middlewares.user_loader import UserLoaderMiddleware
 
 db_pool = None
@@ -26,7 +26,7 @@ async def main():
     dp = Dispatcher(storage=MemoryStorage())
 
     # Подключаем роутеры
-    dp.include_routers(start_router, buy_proxy_router, settings_router, profile_router, checker_router)
+    dp.include_routers(start_router, buy_proxy_router, settings_router, profile_router, checker_router, my_proxy_router)
 
     # Подключение к базе данных
     db_pool = await asyncpg.create_pool(

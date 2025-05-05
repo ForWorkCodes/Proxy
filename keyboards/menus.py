@@ -62,6 +62,20 @@ async def get_top_up_balance_menu(state: FSMContext):
         [InlineKeyboardButton(text=texts["krypto"], callback_data="krypto_top_up")],
     ])
 
+# Клавиатура для моих прокси
+async def empty_proxy_menu(state: FSMContext):
+    texts = await get_texts(state)
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=texts["buy_proxy?"], callback_data="buy_proxy")],
+        [InlineKeyboardButton(text=texts["test_add_proxy"], callback_data="test_add_proxy")]
+    ])
+
+async def download_proxies_keyboard(state: FSMContext):
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=".csv", callback_data="download_proxies_csv")],
+        [InlineKeyboardButton(text=".xls", callback_data="download_proxies_xls")]
+    ])
+
 # Клавиатуры для выбора типа прокси
 def proxy_type_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=[
