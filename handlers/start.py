@@ -3,23 +3,19 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 from keyboards.menus import get_main_menu, get_start_menu
-from services.user_service import create_user
-from asyncpg import Pool
 from data.locales import get_text
 from aiogram.filters import StateFilter
 
 router = Router()
 
 @router.message(CommandStart())
-async def command_start_handler(message: Message, state: FSMContext, db_pool: Pool) -> None:
-    await create_user(message, db_pool, state)
+async def command_start_handler(message: Message, state: FSMContext) -> None:
     first_hello = await get_text(state, 'first_hello')
     menu = await get_main_menu(state)
     await message.answer(f"{first_hello}, <b>{message.from_user.full_name}!</b>", reply_markup=menu  )
 
 @router.message(StateFilter(None))
-async def main_menu_handler(message: Message, state: FSMContext, db_pool: Pool):
-    await create_user(message, db_pool, state)
+async def main_menu_handler(message: Message, state: FSMContext):
     expected_main_menu_text = await get_text(state, 'main_menu_btn')
     if message.text.strip().lower() == expected_main_menu_text.lower():
         menu = await get_main_menu(state)

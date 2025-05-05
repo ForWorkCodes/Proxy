@@ -12,6 +12,9 @@ from handlers.buy_proxy import router as buy_proxy_router
 from handlers.settings import router as settings_router
 from handlers.profile import router as profile_router
 from handlers.checker import router as checker_router
+
+from middlewares.user_loader import UserLoaderMiddleware
+
 db_pool = None
 
 async def main():
@@ -32,6 +35,10 @@ async def main():
         max_size=20
     )
     dp["db_pool"] = db_pool
+
+    # Подключаем middleware
+    dp.message.middleware(UserLoaderMiddleware(db_pool))
+    dp.callback_query.middleware(UserLoaderMiddleware(db_pool))
 
     # Запуск бота
     print(f"Старт бота")
