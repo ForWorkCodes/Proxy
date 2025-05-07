@@ -38,7 +38,7 @@ texts = {
         "buy_proxy?": "Купить прокси?",
         "empty_proxy_text": "У вас нет прокси",
         "download_proxies": "Скачать",
-        "proxy:": "Прокси:"
+        "proxy:": "Прокси:",
     },
     "en": {
         "Yes": "Yes",
@@ -77,7 +77,7 @@ texts = {
         "buy_proxy?": "Buy proxy?",
         "empty_proxy_text": "You have no proxies",
         "download_proxies": "Download",
-        "proxy:": "Proxy:"
+        "proxy:": "Proxy:",
     }
 }
 

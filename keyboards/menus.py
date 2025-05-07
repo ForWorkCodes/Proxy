@@ -79,10 +79,26 @@ async def download_proxies_keyboard(state: FSMContext):
 # Клавиатуры для выбора типа прокси
 def proxy_type_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="IPv4", callback_data="type_ipv4")],
         [InlineKeyboardButton(text="IPv6", callback_data="type_ipv6")],
-        [InlineKeyboardButton(text="IPv4 Shared", callback_data="type_shared")],
+        [InlineKeyboardButton(text="IPv4", callback_data="type_ipv4")],
+        [InlineKeyboardButton(text="IPv4 Shared", callback_data="type_ipv4_shared")],
     ])
+
+async def get_countries_list_keyboard(state: FSMContext):
+    # Получаем список стран по api
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="Россия")],
+            [KeyboardButton(text="Сербия")],
+            [KeyboardButton(text="Сербия")],
+            [KeyboardButton(text="Сербия")],
+            [KeyboardButton(text="Сербия")],
+            [KeyboardButton(text="Сербия")],
+            [KeyboardButton(text="Сербия")]
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=True
+    )
 
 def confirm_country_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=[
