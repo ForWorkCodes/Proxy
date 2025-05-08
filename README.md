@@ -38,3 +38,5 @@ CREATE TABLE users_telegram (
     created_at TIMESTAMP DEFAULT now() NOT NULL,
     updated_at TIMESTAMP DEFAULT now() NOT NULL
 );
+
+Для дебага на сервере  docker compose logs -f bot
