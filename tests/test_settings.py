@@ -58,6 +58,7 @@ async def test_my_settings(callback_query, state):
 
 @pytest.mark.asyncio
 async def test_change_language(callback_query, state):
+    assert False
     with patch('handlers.settings.get_text', new_callable=AsyncMock) as mock_get_text, \
          patch('handlers.settings.get_language_menu') as mock_get_language_menu:
         
