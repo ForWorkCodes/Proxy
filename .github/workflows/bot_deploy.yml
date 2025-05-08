@@ -25,7 +25,6 @@ jobs:
 
       - name: Run tests
         run: |
-          cd proxy_bot
           pytest tests/
 
       - name: SSH and deploy bot
