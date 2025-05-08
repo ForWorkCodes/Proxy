@@ -3,7 +3,7 @@ name: Deploy Bot via SSH
 on:
   push:
     branches:
-      - main
+      - dev
 
 jobs:
   deploy:
