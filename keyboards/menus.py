@@ -1,6 +1,16 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 from aiogram.fsm.context import FSMContext
 from data.locales import get_texts, get_text
+from services.country_service import CountryService
+from aiogram.exceptions import TelegramBadRequest
+
+async def make_back_keyboard(state: FSMContext) -> ReplyKeyboardMarkup:
+    texts = await get_texts(state)
+    return ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text=texts["back"])]],
+        resize_keyboard=True,
+        one_time_keyboard=True
+    )
 
 async def get_start_menu(state: FSMContext):
     main_menu_text = await get_text(state, 'main_menu_btn')
@@ -12,6 +22,13 @@ async def get_start_menu(state: FSMContext):
     )
 
 async def get_main_menu(state: FSMContext):
+    data = await state.get_data()
+    new_data = {}
+    if "user" in data:
+        new_data["user"] = data["user"]
+    await state.set_data(new_data)
+    await state.set_state(None)
+
     texts = await get_texts(state)
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=texts['buy_proxy'], callback_data="buy_proxy")],
@@ -77,25 +94,46 @@ async def download_proxies_keyboard(state: FSMContext):
     ])
 
 # Клавиатуры для выбора типа прокси
-def proxy_type_keyboard():
+async def proxy_type_keyboard(state: FSMContext):
+    texts = await get_texts(state)
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="IPv6", callback_data="type_ipv6")],
         [InlineKeyboardButton(text="IPv4", callback_data="type_ipv4")],
-        [InlineKeyboardButton(text="IPv4 Shared", callback_data="type_ipv4_shared")],
+        [InlineKeyboardButton(text="IPv4 Shared", callback_data="type_ipv4shared")],
+        [InlineKeyboardButton(text=texts["back"], callback_data="type_back")],
     ])
 
 async def get_countries_list_keyboard(state: FSMContext):
-    # Получаем список стран по api
+    country_service = CountryService()
+    data = await state.get_data()
+    texts = await get_texts(state)
+
+    proxy_type = data.get("proxy_type")
+    if not proxy_type:
+        raise TelegramBadRequest(texts["proxy_type_not_selected"])
+
+    country_codes = await country_service.get_countries(proxy_type)
+
+    if not country_codes:
+        return None
+    
+    keyboard = []
+    row = []
+
+    for code in country_codes:
+        country_name = await country_service.get_country_name(state, code)
+        row.append(KeyboardButton(text=country_name))
+        if len(row) == 3:
+            keyboard.append(row)
+            row = []
+
+    if row:
+        keyboard.append(row)
+
+    keyboard.append([KeyboardButton(text=texts["back"])])
+
     return ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="Россия")],
-            [KeyboardButton(text="Сербия")],
-            [KeyboardButton(text="Сербия")],
-            [KeyboardButton(text="Сербия")],
-            [KeyboardButton(text="Сербия")],
-            [KeyboardButton(text="Сербия")],
-            [KeyboardButton(text="Сербия")]
-        ],
+        keyboard=keyboard,
         resize_keyboard=True,
         one_time_keyboard=True
     )
@@ -105,6 +143,14 @@ def confirm_country_keyboard():
         [InlineKeyboardButton(text="Да, подходит", callback_data="country_ok")],
         [InlineKeyboardButton(text="Выбрать другую", callback_data="country_change")],
     ])
+
+async def get_quantity_keyboard(state: FSMContext):
+    texts = await get_texts(state)
+    return ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text=texts["back"])]],
+        resize_keyboard=True,
+        one_time_keyboard=True
+    )
 
 def confirm_quantity_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=[

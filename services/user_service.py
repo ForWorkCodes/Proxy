@@ -5,11 +5,16 @@ from aiogram.fsm.context import FSMContext
 from asyncpg import Pool
 
 async def create_user(message, db: Pool, state: FSMContext) -> dict:
+    if message.from_user.is_bot:
+        print("⚠️ Сообщение от бота, пропускаем")
+        return None
+    
     user_id = message.from_user.id
+    print("create_user", message.from_user)
 
     data = await state.get_data()
     if "user" in data:
-        print("Пользователь получен из кэша")
+        print("Пользователь получен из кэша", data["user"])
         return data["user"]
 
     resolved_lang = resolve_language(message.from_user.language_code)
@@ -17,7 +22,7 @@ async def create_user(message, db: Pool, state: FSMContext) -> dict:
     user_db = await get_user(user_id, db)
 
     if user_db:
-        print("Пользователь найден в базе данных")
+        print("Пользователь найден в базе данных", user_db)
         user = {
             "user_id": user_db['user_id'],
             "username": user_db['username'],
@@ -51,11 +56,13 @@ async def get_user(user_id: int, db: Pool):
 
 async def update_user_language(user_id: int, lang: str, db: Pool, state: FSMContext) -> None:
     await save_user_language(user_id, lang, db)
-
+    
     data = await state.get_data()
-    user = data.get("user")
-    if user:
+    
+    if "user" in data:
+        user = data["user"]
         user["lang"] = lang
+        print("language updated: ", lang)
         await state.update_data(user=user)
 
 async def get_language(user_id: int, db: Pool) -> None:
