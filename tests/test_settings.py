@@ -2,7 +2,6 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from aiogram.types import CallbackQuery, Message, User
 from aiogram.fsm.context import FSMContext
-from asyncpg import Pool
 from handlers.settings import (
     my_settings,
     change_language,
@@ -29,11 +28,6 @@ def callback_query():
 def state():
     state = AsyncMock(spec=FSMContext)
     return state
-
-@pytest.fixture
-def db_pool():
-    pool = AsyncMock(spec=Pool)
-    return pool
 
 @pytest.mark.asyncio
 async def test_my_settings(callback_query, state):
@@ -74,7 +68,7 @@ async def test_change_language(callback_query, state):
         )
 
 @pytest.mark.asyncio
-async def test_change_language_ru(callback_query, state, db_pool):
+async def test_change_language_ru(callback_query, state):
     with patch('handlers.settings.update_user_language', new_callable=AsyncMock) as mock_update_language, \
          patch('handlers.settings.get_texts', new_callable=AsyncMock) as mock_get_texts, \
          patch('handlers.settings.get_main_menu', new_callable=AsyncMock) as mock_get_main_menu:
@@ -85,13 +79,12 @@ async def test_change_language_ru(callback_query, state, db_pool):
         }
         mock_get_main_menu.return_value = 'main_menu'
         
-        await change_language_ru(callback_query, db_pool, state)
+        await change_language_ru(callback_query, state)
         
         # Verify language was updated
         mock_update_language.assert_called_once_with(
             callback_query.from_user.id,
             "ru",
-            db_pool,
             state
         )
         
@@ -104,7 +97,7 @@ async def test_change_language_ru(callback_query, state, db_pool):
         )
 
 @pytest.mark.asyncio
-async def test_change_language_en(callback_query, state, db_pool):
+async def test_change_language_en(callback_query, state):
     with patch('handlers.settings.update_user_language', new_callable=AsyncMock) as mock_update_language, \
          patch('handlers.settings.get_texts', new_callable=AsyncMock) as mock_get_texts, \
          patch('handlers.settings.get_main_menu', new_callable=AsyncMock) as mock_get_main_menu:
@@ -115,13 +108,12 @@ async def test_change_language_en(callback_query, state, db_pool):
         }
         mock_get_main_menu.return_value = 'main_menu'
         
-        await change_language_en(callback_query, db_pool, state)
+        await change_language_en(callback_query, state)
         
         # Verify language was updated
         mock_update_language.assert_called_once_with(
             callback_query.from_user.id,
             "en",
-            db_pool,
             state
         )
         
