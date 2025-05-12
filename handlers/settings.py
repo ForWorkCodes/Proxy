@@ -27,8 +27,8 @@ async def change_language(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.message.answer(text=text, reply_markup=get_language_menu())
 
 @router.callback_query(F.data == "change_language_ru")
-async def change_language_ru(callback: CallbackQuery, db_pool: Pool, state: FSMContext) -> None:
-    await update_user_language(callback.from_user.id, "ru", db_pool, state)
+async def change_language_ru(callback: CallbackQuery, state: FSMContext) -> None:
+    await update_user_language(callback.from_user.id, "ru", state)
     texts = await get_texts(state)
     main_menu = await get_main_menu(state)
     await callback.answer()
@@ -37,8 +37,8 @@ async def change_language_ru(callback: CallbackQuery, db_pool: Pool, state: FSMC
     await callback.message.answer(text=texts['menu_title'], reply_markup=main_menu)
 
 @router.callback_query(F.data == "change_language_en")
-async def change_language_en(callback: CallbackQuery, db_pool: Pool, state: FSMContext) -> None:
-    await update_user_language(callback.from_user.id, "en", db_pool, state)
+async def change_language_en(callback: CallbackQuery, state: FSMContext) -> None:
+    await update_user_language(callback.from_user.id, "en", state)
     texts = await get_texts(state)
     main_menu = await get_main_menu(state)
     await callback.answer()

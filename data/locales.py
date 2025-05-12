@@ -253,7 +253,7 @@ DEFAULT_LANG = "en"
 
 async def get_texts(state: FSMContext) -> dict:
     data = await state.get_data()
-    lang = data.get("user", {}).get("lang", DEFAULT_LANG)
+    lang = data.get("user", {}).get("language", DEFAULT_LANG)
     return texts.get(lang, texts[DEFAULT_LANG])
 
 async def get_text(state: FSMContext, key: str) -> str:

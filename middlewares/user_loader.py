@@ -16,5 +16,5 @@ class UserLoaderMiddleware(BaseMiddleware):
     ) -> Any:
         state = data['state']
         message = event.message if isinstance(event, CallbackQuery) else event
-        await create_user(message, self.db_pool, state)
+        await create_user(message, state)
         return await handler(event, data)

@@ -1,69 +1,62 @@
-from db.user_repo import get_user_language, save_user_language, upsert_user, get_user_by_id
 from utils.i18n import resolve_language
 from aiogram.fsm.context import FSMContext
+from services.user_service_api import UserServiceAPI
+import sys
 
-from asyncpg import Pool
+user_service = UserServiceAPI()
 
-async def create_user(message, db: Pool, state: FSMContext) -> dict:
+async def create_user(message, state: FSMContext) -> dict:
     if message.from_user.is_bot:
         print("⚠️ Сообщение от бота, пропускаем")
         return None
     
     user_id = message.from_user.id
-    print("create_user", message.from_user)
-
     data = await state.get_data()
     if "user" in data:
         print("Пользователь получен из кэша", data["user"])
         return data["user"]
 
     resolved_lang = resolve_language(message.from_user.language_code)
-
-    user_db = await get_user(user_id, db)
+    user_db = await user_service.get_user(user_id)
 
     if user_db:
-        print("Пользователь найден в базе данных", user_db)
+        print("Пользователь найден в базе данных")
         user = {
-            "user_id": user_db['user_id'],
+            "user_id": user_db['telegram_id'],
             "username": user_db['username'],
-            "first_name": user_db['first_name'],
-            "last_name": user_db['last_name'],
-            "lang": user_db['language']
+            "firstname": user_db['firstname'],
+            "language": user_db['language'],
+            "active": user_db['active'],
+            "banned": user_db['banned']
         }
     else:
         print("Пользователь не найден в базе данных")
-        user = {
-            "user_id": user_id,
-            "username": message.from_user.username,
-            "first_name": message.from_user.first_name,
-            "last_name": message.from_user.last_name,
-            "lang": resolved_lang
-        }
-        await upsert_user(
-            user_id=user_id,
-            username=user["username"],
-            first_name=user["first_name"],
-            last_name=user["last_name"],
-            lang=resolved_lang,
-            db=db
+        user = await user_service.upsert_user(
+            telegram_id=user_id,
+            chat_id=message.chat.id,
+            username=message.from_user.username,
+            first_name=message.from_user.first_name,
+            language=resolved_lang,
         )
+        
+        if user is None:
+            await message.answer("⚠️ Error creating user. Please try again later.")
+            print("❌ Критическая ошибка: не удалось создать пользователя")
+            return
+    
+    print("-----------------------------")
+    print(user)
+    print("-----------------------------")
 
     await state.update_data(user=user)
     return user
 
-async def get_user(user_id: int, db: Pool):
-    return await get_user_by_id(user_id, db)
-
-async def update_user_language(user_id: int, lang: str, db: Pool, state: FSMContext) -> None:
-    await save_user_language(user_id, lang, db)
-    
+async def update_user_language(user_id: int, lang: str, state: FSMContext) -> None:
+    await user_service.update_language(user_id, lang)
     data = await state.get_data()
     
     if "user" in data:
         user = data["user"]
-        user["lang"] = lang
+        user["language"] = lang
         print("language updated: ", lang)
         await state.update_data(user=user)
-
-async def get_language(user_id: int, db: Pool) -> None:
-    await get_user_language(user_id, db)

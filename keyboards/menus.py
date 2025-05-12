@@ -138,12 +138,6 @@ async def get_countries_list_keyboard(state: FSMContext):
         one_time_keyboard=True
     )
 
-def confirm_country_keyboard():
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Да, подходит", callback_data="country_ok")],
-        [InlineKeyboardButton(text="Выбрать другую", callback_data="country_change")],
-    ])
-
 async def get_quantity_keyboard(state: FSMContext):
     texts = await get_texts(state)
     return ReplyKeyboardMarkup(
