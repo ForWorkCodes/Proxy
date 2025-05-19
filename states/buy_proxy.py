@@ -4,7 +4,6 @@ class BuyProxy(StatesGroup):
     Type = State()
     Country = State()
     Quantity = State()
+    SelectPeriod = State()
     ConfirmAvailability = State()
-    PaymentChoice = State()
     PaymentProcess = State()
-    ProxyDelivery = State()

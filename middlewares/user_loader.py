@@ -1,12 +1,11 @@
 from aiogram import BaseMiddleware
-from asyncpg import Pool
 from typing import Callable, Awaitable, Dict, Any
 from aiogram.types import Message, CallbackQuery
 from services.user_service import create_user
 
 class UserLoaderMiddleware(BaseMiddleware):
-    def __init__(self, db_pool: Pool):
-        self.db_pool = db_pool
+    def __init__(self):
+        print("middleware")
 
     async def __call__(
         self,

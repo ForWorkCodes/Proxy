@@ -1,9 +1,9 @@
 from utils.i18n import resolve_language
 from aiogram.fsm.context import FSMContext
-from services.user_service_api import UserServiceAPI
-import sys
+from services.proxy_api_client import ProxyAPIClient
 
-user_service = UserServiceAPI()
+user_service = ProxyAPIClient()
+
 
 async def create_user(message, state: FSMContext) -> dict:
     if message.from_user.is_bot:
@@ -50,6 +50,7 @@ async def create_user(message, state: FSMContext) -> dict:
 
     await state.update_data(user=user)
     return user
+
 
 async def update_user_language(user_id: int, lang: str, state: FSMContext) -> None:
     await user_service.update_language(user_id, lang)

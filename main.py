@@ -1,11 +1,10 @@
 import logging
 import asyncio
-import asyncpg
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from config import BOT_TOKEN, POSTGRES_DSN
+from config import BOT_TOKEN
 
 from handlers.start import router as start_router
 from handlers.buy_proxy import router as buy_proxy_router
@@ -15,11 +14,8 @@ from handlers.checker import router as checker_router
 from handlers.my_proxy import router as my_proxy_router
 from middlewares.user_loader import UserLoaderMiddleware
 
-db_pool = None
 
 async def main():
-    global db_pool
-
     logging.basicConfig(level=logging.INFO)
 
     bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
@@ -28,25 +24,13 @@ async def main():
     # Подключаем роутеры
     dp.include_routers(start_router, buy_proxy_router, settings_router, profile_router, checker_router, my_proxy_router)
 
-    # Подключение к базе данных
-    db_pool = await asyncpg.create_pool(
-        dsn=POSTGRES_DSN,
-        min_size=5,
-        max_size=20
-    )
-    dp["db_pool"] = db_pool
-
     # Подключаем middleware
-    dp.message.middleware(UserLoaderMiddleware(db_pool))
-    dp.callback_query.middleware(UserLoaderMiddleware(db_pool))
+    dp.message.middleware(UserLoaderMiddleware())
+    dp.callback_query.middleware(UserLoaderMiddleware())
 
     # Запуск бота
     print(f"Старт бота")
-    try:
-        await dp.start_polling(bot)
-    finally:
-        await db_pool.close()
-        await bot.session.close()
+    await dp.start_polling(bot)
 
 if __name__ == "__main__":
     asyncio.run(main())
