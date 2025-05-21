@@ -18,7 +18,7 @@ class ProxyAvailabilityResponse(BaseModel):
 class ProxyGetPriceDTO(BaseModel):
     telegram_id: int
     version: str = Field(..., min_length=1)
-    days: int = Field(..., ge=3, le=180)
+    days: int = Field(..., ge=1, le=180)
     quantity: int = Field(..., gt=0)
 
     @field_validator('days')
@@ -35,11 +35,11 @@ class ProxyGetPriceResponse(BaseModel):
 
 
 class ProxyProcessBuyingDTO(BaseModel):
-    telegram_id: int
+    telegram_id: str
     version: str = Field(..., min_length=1)
     type: str = Field(..., min_length=1)
     country: str = Field(..., min_length=2, max_length=3)
-    days: int = Field(..., ge=3, le=180)
+    days: int = Field(..., ge=1, le=180)
     quantity: int = Field(..., gt=0)
 
 
@@ -61,6 +61,7 @@ class ProxyItem(BaseModel):
 class ProxyProcessBuyingResponse(BaseModel):
     success: bool
     error_code: int
+    error: str
     list: List[ProxyItem]
     quantity: int
     price: float

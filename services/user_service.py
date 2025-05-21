@@ -1,6 +1,7 @@
 from utils.i18n import resolve_language
 from aiogram.fsm.context import FSMContext
 from services.proxy_api_client import ProxyAPIClient
+from dtos.user_dto import UserUpsertDTO
 
 user_service = ProxyAPIClient()
 
@@ -31,13 +32,14 @@ async def create_user(message, state: FSMContext) -> dict:
         }
     else:
         print("Пользователь не найден в базе данных")
-        user = await user_service.upsert_user(
-            telegram_id=user_id,
-            chat_id=message.chat.id,
+        dto = UserUpsertDTO(
+            telegram_id=str(user_id),
+            chat_id=str(message.chat.id),
             username=message.from_user.username,
-            first_name=message.from_user.first_name,
-            language=resolved_lang,
+            firstname=message.from_user.first_name,
+            language=resolved_lang
         )
+        user = await user_service.upsert_user(dto)
         
         if user is None:
             await message.answer("⚠️ Error creating user. Please try again later.")

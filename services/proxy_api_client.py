@@ -109,26 +109,35 @@ class ProxyAPIClient:
         )
 
     async def process_buying_proxy(self, dto: ProxyProcessBuyingDTO) -> ProxyProcessBuyingResponse:
+        error_code = 404
+        error = ""
         try:
             async with ClientSession() as session:
-                async with session.get(f"{self.base_url}/buy_proxy", params=dto.dict()) as response:
+                async with session.post(f"{self.base_url}/buy_proxy", json=dto.dict()) as response:
                     if response.status == 200:
                         data = await response.json()
-                        return ProxyProcessBuyingResponse(
-                            success=True,
-                            error_code=0,
-                            quantity=data.get("quantity"),
-                            price=data.get("price"),
-                            days=data.get("days"),
-                            country=data.get("country"),
-                            list=data.get("list", [])
-                        )
+                        if data.get("status") == "success":
+                            return ProxyProcessBuyingResponse(
+                                success=True,
+                                error_code=0,
+                                error="",
+                                quantity=data.get("quantity"),
+                                price=data.get("price"),
+                                days=data.get("days"),
+                                country=data.get("country"),
+                                list=data.get("list", [])
+                            )
+                        else:
+                            error_code = data.get("status_code")
+                            error = data.get("error")
         except ClientError as e:
+            error = f"API request failed: {e}"
             logger.error(f"API request failed: {e}")
 
         return ProxyProcessBuyingResponse(
             success=False,
-            error_code=0,
+            error_code=error_code,
+            error=error,
             quantity=0,
             price=0,
             days=0,
@@ -139,7 +148,7 @@ class ProxyAPIClient:
     async def get_user(self, telegram_id: int) -> Optional[dict]:
         try:
             async with ClientSession() as session:
-                async with session.get(f"{self.base_url}/users/by-telegram-id/{telegram_id}") as resp:
+                async with session.get(f"{self.base_url}/users/by-telegram-id/{str(telegram_id)}") as resp:
                     if resp.status == 200:
                         return await resp.json()
                     return None

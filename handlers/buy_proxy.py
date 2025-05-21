@@ -7,7 +7,7 @@ from dtos.proxy_dto import ProxyAvailabilityDTO, ProxyGetPriceDTO, ProxyProcessB
 from keyboards.menus import (
     proxy_type_keyboard, get_countries_list_keyboard,
     confirm_proxy_keyboard, get_main_menu,
-    make_back_keyboard
+    make_back_keyboard, get_balance_menu
 )
 from itertools import islice
 from pydantic import ValidationError
@@ -179,12 +179,10 @@ async def select_period(message: Message, state: FSMContext):
         await message.answer(text, reply_markup=keyboard)
         return
 
-    await message.delete()
-
     days_str = message.text.strip()
     days = int(days_str)
 
-    if days < 3 or days > 180:
+    if days < 1 or days > 180:
         error_text = await get_text(state, 'Error')
         retry_text = await get_text(state, 'select_period_days:')
         await message.answer(f"{error_text}\n\n{retry_text}")
@@ -249,14 +247,14 @@ async def confirm_payment(callback: CallbackQuery, state: FSMContext):
     await callback.message.delete()
     await state.set_state(BuyProxy.PaymentProcess)
     text = await get_text(state, 'deducting_from_balance')
-    await callback.message.answer(text)
+    msg = await callback.message.answer(text)
 
     service = ProxyAPIClient()
     data = await state.get_data()
 
     try:
         dto = ProxyProcessBuyingDTO(
-            telegram_id=callback.message.from_user.id,
+            telegram_id=str(callback.from_user.id),
             version=data.get("proxy_version"),
             type=data.get("proxy_type"),
             country=data.get("country"),
@@ -267,29 +265,37 @@ async def confirm_payment(callback: CallbackQuery, state: FSMContext):
         logger.error(f"Missing field: {e}")
         error_text = await get_text(state, 'api_error')
         back_keyboard = await make_back_keyboard(state)
+
+        await msg.delete()
         await callback.message.answer(error_text, reply_markup=back_keyboard)
         return
     except ValidationError as e:
         logger.warning(f"Validation failed: {e}")
         error_text = await get_text(state, 'wrong_quantity')
+
+        await msg.delete()
         await callback.message.answer(error_text)
         return
 
     response = await service.process_buying_proxy(dto)
+    await msg.delete()
 
     if not response.success:
-        error_text = await get_text(state, 'api_error')
-        back_keyboard = await make_back_keyboard(state)
-        await callback.message.answer(error_text, reply_markup=back_keyboard)
-        return
+        if response.error_code == 400:
+            error_text = await get_text(state, 'no_money_purshare?')
+            keyboard = await get_balance_menu(state)
+        else:
+            error_text = await get_text(state, 'api_error')
+            keyboard = await get_main_menu(state)
 
-    await callback.message.delete()
-    text = await get_text(state, 'deducting_from_balance')
-    await callback.message.answer(text)
+        await callback.message.answer(error_text, reply_markup=keyboard)
+    else:
+        text = await get_text(state, 'purchase_success')
+        await callback.message.answer(text)
 
-    menu = await get_main_menu(state)
-    await callback.message.answer(text, reply_markup=menu)
-    await callback.answer()
+        menu = await get_main_menu(state)
+        await callback.message.answer(text, reply_markup=menu)
+        await callback.answer()
 
 
 @router.callback_query(BuyProxy.ConfirmAvailability, F.data == "pay_cancel")
