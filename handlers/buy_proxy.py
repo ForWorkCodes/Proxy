@@ -281,7 +281,7 @@ async def confirm_payment(callback: CallbackQuery, state: FSMContext):
     await msg.delete()
 
     if not response.success:
-        if response.error_code == 400:
+        if response.error_code == 4001:
             error_text = await get_text(state, 'no_money_purshare?')
             keyboard = await get_balance_menu(state)
         else:
