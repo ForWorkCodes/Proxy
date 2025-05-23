@@ -6,7 +6,8 @@ from aiogram.fsm.context import FSMContext
 from data.locales import get_text
 import logging
 from dtos.user_dto import UserUpsertDTO
-from dtos.proxy_dto import ProxyAvailabilityDTO, ProxyAvailabilityResponse, ProxyGetPriceDTO, ProxyGetPriceResponse, ProxyProcessBuyingDTO, ProxyProcessBuyingResponse
+from dtos.proxy_dto import ProxyAvailabilityDTO, ProxyAvailabilityResponse, ProxyGetPriceDTO,\
+    ProxyGetPriceResponse, ProxyProcessBuyingDTO, ProxyProcessBuyingResponse, ProxyUsersListResponse, ProxyItem
 
 logger = logging.getLogger(__name__)
 
@@ -109,7 +110,7 @@ class ProxyAPIClient:
         )
 
     async def process_buying_proxy(self, dto: ProxyProcessBuyingDTO) -> ProxyProcessBuyingResponse:
-        error_code = 404
+        status_code = 404
         error = ""
         try:
             async with ClientSession() as session:
@@ -117,18 +118,20 @@ class ProxyAPIClient:
                     if response.status == 200:
                         data = await response.json()
                         if data.get("status") == "success":
+                            raw_list = data.get("proxies", [])
+                            proxy_items = [ProxyItem(**item) for item in raw_list]
                             return ProxyProcessBuyingResponse(
                                 success=True,
-                                error_code=0,
+                                status_code=0,
                                 error="",
                                 quantity=data.get("quantity"),
                                 price=data.get("price"),
                                 days=data.get("days"),
                                 country=data.get("country"),
-                                list=data.get("list", [])
+                                list=proxy_items
                             )
                         else:
-                            error_code = data.get("status_code")
+                            status_code = data.get("status_code")
                             error = data.get("error")
         except ClientError as e:
             error = f"API request failed: {e}"
@@ -136,7 +139,7 @@ class ProxyAPIClient:
 
         return ProxyProcessBuyingResponse(
             success=False,
-            error_code=error_code,
+            status_code=status_code,
             error=error,
             quantity=0,
             price=0,
@@ -145,10 +148,40 @@ class ProxyAPIClient:
             list=[]
         )
 
+    async def get_my_list_proxy(self, telegram_id: int) -> ProxyUsersListResponse:
+        status_code = 404
+        try:
+            async with ClientSession() as session:
+                async with session.get(f"{self.base_url}/get-proxy-telegram-id/{str(telegram_id)}") as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        if data.get("success"):
+                            raw_list = data.get("proxies", [])
+                            proxy_items = [ProxyItem(**item) for item in raw_list]
+                            return ProxyUsersListResponse(
+                                success=True,
+                                status_code=0,
+                                error="",
+                                list=proxy_items
+                            )
+                        else:
+                            status_code = data.get("status_code")
+                            error = data.get("error")
+        except ClientError as e:
+            error = f"API request failed: {e}"
+            logger.error(f"API request failed: {e}")
+
+        return ProxyUsersListResponse(
+            success=False,
+            status_code=status_code,
+            error=error,
+            list=[]
+        )
+
     async def get_user(self, telegram_id: int) -> Optional[dict]:
         try:
             async with ClientSession() as session:
-                async with session.get(f"{self.base_url}/users/by-telegram-id/{str(telegram_id)}") as resp:
+                async with session.get(f"{self.base_url}/user/by-telegram-id/{str(telegram_id)}") as resp:
                     if resp.status == 200:
                         return await resp.json()
                     return None
@@ -159,7 +192,7 @@ class ProxyAPIClient:
     async def upsert_user(self, dto: UserUpsertDTO) -> Optional[dict]:
         try:
             async with ClientSession() as session:
-                async with session.post(f"{self.base_url}/users/upsert", json=dto.dict()) as resp:
+                async with session.post(f"{self.base_url}/user/upsert", json=dto.dict()) as resp:
                     if resp.status == 200:
                         return await resp.json()
                     return None
@@ -171,7 +204,7 @@ class ProxyAPIClient:
         try:
             async with ClientSession() as session:
                 await session.patch(
-                    f"{self.base_url}/users/{telegram_id}/language",
+                    f"{self.base_url}/user/{telegram_id}/language",
                     json={"language": lang}
                 )
         except ClientError as e:

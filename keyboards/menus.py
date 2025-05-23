@@ -20,7 +20,8 @@ async def get_start_menu(state: FSMContext):
         keyboard=[
             [KeyboardButton(text=main_menu_text)]
         ],
-        resize_keyboard=True
+        resize_keyboard=True,
+        one_time_keyboard=True
     )
 
 

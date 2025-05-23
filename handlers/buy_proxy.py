@@ -2,7 +2,7 @@ from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from states.buy_proxy import BuyProxy
-from data.locales import get_text
+from data.locales import get_text, get_texts
 from dtos.proxy_dto import ProxyAvailabilityDTO, ProxyGetPriceDTO, ProxyProcessBuyingDTO
 from keyboards.menus import (
     proxy_type_keyboard, get_countries_list_keyboard,
@@ -244,9 +244,13 @@ async def select_period(message: Message, state: FSMContext):
 
 @router.callback_query(BuyProxy.ConfirmAvailability, F.data == "pay_yes")
 async def confirm_payment(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(None)
     await callback.message.delete()
     await state.set_state(BuyProxy.PaymentProcess)
-    text = await get_text(state, 'deducting_from_balance')
+
+    texts = await get_texts(state)
+
+    text = texts["deducting_from_balance"]
     msg = await callback.message.answer(text)
 
     service = ProxyAPIClient()
@@ -263,7 +267,7 @@ async def confirm_payment(callback: CallbackQuery, state: FSMContext):
         )
     except KeyError as e:
         logger.error(f"Missing field: {e}")
-        error_text = await get_text(state, 'api_error')
+        error_text = texts["api_error"]
         back_keyboard = await make_back_keyboard(state)
 
         await msg.delete()
@@ -271,7 +275,7 @@ async def confirm_payment(callback: CallbackQuery, state: FSMContext):
         return
     except ValidationError as e:
         logger.warning(f"Validation failed: {e}")
-        error_text = await get_text(state, 'wrong_quantity')
+        error_text = texts["wrong_quantity"]
 
         await msg.delete()
         await callback.message.answer(error_text)
@@ -281,17 +285,32 @@ async def confirm_payment(callback: CallbackQuery, state: FSMContext):
     await msg.delete()
 
     if not response.success:
-        if response.error_code == 4001:
-            error_text = await get_text(state, 'no_money_purshare?')
+        if response.status_code == 4001:
+            error_text = texts["no_money_purshare?"]
             keyboard = await get_balance_menu(state)
+        elif response.status_code == 210:
+            error_text = texts["error_days"]
+            keyboard = await get_main_menu(state)
         else:
-            error_text = await get_text(state, 'api_error')
+            error_text = texts["api_error"]
             keyboard = await get_main_menu(state)
 
         await callback.message.answer(error_text, reply_markup=keyboard)
     else:
-        text = await get_text(state, 'purchase_success')
+        text = texts["purchase_success"]
         await callback.message.answer(text)
+
+        for idx, proxy in enumerate(response.list, start=1):
+            country = texts["country_" + proxy.country]
+            date_end = proxy.date_end.strftime("%d.%m.%Y %H:%M") if proxy.date_end else "—"
+            proxy_text = (
+                f"🔢 #{idx}\n"
+                f"🌐 '{proxy.host}:{proxy.port}'\n"
+                f"🔢 #{proxy.version}\n"
+                f"📍 {country} | 🛠 {proxy.type.upper()}\n"
+                f"⏳ До: {date_end}"
+            )
+            await callback.message.answer(proxy_text, parse_mode="Markdown")
 
         menu = await get_main_menu(state)
         await callback.message.answer(text, reply_markup=menu)
@@ -300,29 +319,33 @@ async def confirm_payment(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(BuyProxy.ConfirmAvailability, F.data == "pay_cancel")
 async def cancel_payment(callback: CallbackQuery, state: FSMContext):
-    await state.clear()
+    await state.set_state(None)
     text = await get_text(state, 'purchase_cancelled')
-    await callback.message.answer(text)
+    menu = await get_main_menu(state)
+    await callback.message.answer(text, reply_markup=menu)
     await callback.answer()
 
 
 async def get_proxy_summary(state: FSMContext) -> str:
     data = await state.get_data()
+    texts = await get_texts(state)
+    country = texts["country_"+data['country']]
+    no_choose = texts['no_choose']
     lines = []
 
     if "proxy_version" in data:
-        lines.append(f"Версия: <b>{data['proxy_version']}</b>")
+        lines.append(f"{texts['version']}: <b>{data['proxy_version']}</b>")
     if "proxy_type" in data:
-        lines.append(f"Тип: <b>{data['proxy_type']}</b>")
+        lines.append(f"{texts['type']}: <b>{data['proxy_type']}</b>")
     if "country" in data:
-        lines.append(f"Страна: <b>{data['country']}</b>")
+        lines.append(f"{texts['country']}: <b>{country}</b>")
     if "quantity" in data:
-        lines.append(f"Кол-во: <b>{data['quantity']}</b>")
+        lines.append(f"{texts['quantity']}: <b>{data['quantity']}</b>")
     if "days" in data:
-        lines.append(f"Дней: <b>{data['days']}</b>")
+        lines.append(f"{texts['days']}: <b>{data['days']}</b>")
     if "price" in data:
-        lines.append(f"Цена: <b>{data['price']}</b>")
+        lines.append(f"{texts['price']}: <b>{data['price']} RUB</b>")
 
     if not lines:
-        return "❗ Пока ничего не выбрано."
+        return no_choose
     return "\n".join(lines)

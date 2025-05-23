@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field, field_validator
-from typing import List
+from typing import List, Optional
+from datetime import datetime
 
 
 class ProxyAvailabilityDTO(BaseModel):
@@ -44,26 +45,33 @@ class ProxyProcessBuyingDTO(BaseModel):
 
 
 class ProxyItem(BaseModel):
-    id: int
     ip: str
     host: str
     port: int
     type: str
+    version: str
     country: str
-    date: int
-    date_end: int
+    date: datetime
+    date_end: datetime
     unixtime: int
     unixtime_end: int
-    descr: str
+    descr: Optional[str] = None
     active: bool
 
 
 class ProxyProcessBuyingResponse(BaseModel):
     success: bool
-    error_code: int
+    status_code: int
     error: str
     list: List[ProxyItem]
     quantity: int
     price: float
     days: int
     country: str
+
+
+class ProxyUsersListResponse(BaseModel):
+    success: bool
+    status_code: int
+    error: str
+    list: List[ProxyItem]
