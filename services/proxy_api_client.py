@@ -189,6 +189,17 @@ class ProxyAPIClient:
             logger.error(f"API error in get_user: {e}")
             return None
 
+    async def get_balance(self, telegram_id: int) -> Optional[dict]:
+        try:
+            async with ClientSession() as session:
+                async with session.get(f"{self.base_url}/user/get_balance/{str(telegram_id)}") as resp:
+                    if resp.status == 200:
+                        return await resp.json()
+                    return None
+        except ClientError as e:
+            logger.error(f"API error in get_user: {e}")
+            return None
+
     async def upsert_user(self, dto: UserUpsertDTO) -> Optional[dict]:
         try:
             async with ClientSession() as session:

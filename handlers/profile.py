@@ -2,6 +2,7 @@ from aiogram import Router, F
 from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
 from data.locales import get_texts
+from services import UserService
 from keyboards.menus import (
     get_balance_menu, get_top_up_balance_menu, get_main_menu
 )
@@ -12,7 +13,15 @@ router = Router()
 async def my_balance(callback: CallbackQuery, state: FSMContext) -> None:
     texts = await get_texts(state)
     balance_menu = await get_balance_menu(state)
-    balance_text = "Заглушка для отображения текущего баланса"
+
+    user_service = UserService()
+    user = await user_service.get_balance(callback.from_user.id)
+
+    if not user["success"]:
+        balance_text = texts["api_error"]
+    else:
+        balance_text = texts["current_balance"] + ": " + str(user["balance"]) + " " + user["currency"]
+
     await callback.answer()
     await callback.message.delete()
     await callback.message.answer(text=balance_text)

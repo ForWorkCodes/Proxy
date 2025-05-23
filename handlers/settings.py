@@ -1,7 +1,7 @@
 from aiogram import Router, F
 from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
-from services.user_service import update_user_language
+from services import UserService
 from data.locales import get_texts, get_text
 from keyboards.menus import (
     get_settings_menu, get_language_menu, get_main_menu,
@@ -30,7 +30,8 @@ async def change_language(callback: CallbackQuery, state: FSMContext) -> None:
 
 @router.callback_query(F.data == "change_language_ru")
 async def change_language_ru(callback: CallbackQuery, state: FSMContext) -> None:
-    await update_user_language(callback.from_user.id, "ru", state)
+    user_service = UserService()
+    await user_service.update_user_language(callback.from_user.id, "ru", state)
     texts = await get_texts(state)
     main_menu = await get_main_menu(state)
     await callback.answer()
@@ -41,7 +42,8 @@ async def change_language_ru(callback: CallbackQuery, state: FSMContext) -> None
 
 @router.callback_query(F.data == "change_language_en")
 async def change_language_en(callback: CallbackQuery, state: FSMContext) -> None:
-    await update_user_language(callback.from_user.id, "en", state)
+    user_service = UserService()
+    await user_service.update_user_language(callback.from_user.id, "en", state)
     texts = await get_texts(state)
     main_menu = await get_main_menu(state)
     await callback.answer()

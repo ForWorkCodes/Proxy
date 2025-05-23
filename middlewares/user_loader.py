@@ -1,7 +1,8 @@
 from aiogram import BaseMiddleware
 from typing import Callable, Awaitable, Dict, Any
 from aiogram.types import Message, CallbackQuery
-from services.user_service import create_user
+from services import UserService
+
 
 class UserLoaderMiddleware(BaseMiddleware):
     def __init__(self):
@@ -14,6 +15,15 @@ class UserLoaderMiddleware(BaseMiddleware):
         data: Dict[str, Any]
     ) -> Any:
         state = data['state']
-        message = event.message if isinstance(event, CallbackQuery) else event
-        await create_user(message, state)
+        user_service = UserService()
+
+        if isinstance(event, CallbackQuery):
+            user = event.from_user
+            message = event.message
+        else:
+            user = event.from_user
+            message = event
+
+        await user_service.create_user(user.id, message, state)
+
         return await handler(event, data)
