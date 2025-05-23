@@ -69,7 +69,7 @@ async def test_change_language(callback_query, state):
 
 @pytest.mark.asyncio
 async def test_change_language_ru(callback_query, state):
-    with patch('handlers.settings.update_user_language', new_callable=AsyncMock) as mock_update_language, \
+    with patch("services.user_service.UserService.update_user_language", new_callable=AsyncMock) as mock_update_language, \
          patch('handlers.settings.get_texts', new_callable=AsyncMock) as mock_get_texts, \
          patch('handlers.settings.get_main_menu', new_callable=AsyncMock) as mock_get_main_menu:
         
@@ -98,7 +98,7 @@ async def test_change_language_ru(callback_query, state):
 
 @pytest.mark.asyncio
 async def test_change_language_en(callback_query, state):
-    with patch('handlers.settings.update_user_language', new_callable=AsyncMock) as mock_update_language, \
+    with patch("services.user_service.UserService.update_user_language", new_callable=AsyncMock) as mock_update_language, \
          patch('handlers.settings.get_texts', new_callable=AsyncMock) as mock_get_texts, \
          patch('handlers.settings.get_main_menu', new_callable=AsyncMock) as mock_get_main_menu:
         
