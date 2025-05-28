@@ -119,7 +119,7 @@ class ProxyAPIClient:
                 async with session.post(f"{self.base_url}/buy_proxy", json=dto.dict()) as response:
                     if response.status == 200:
                         data = await response.json()
-                        if data.get("status") == "success":
+                        if data.get("success"):
                             raw_list = data.get("proxies", [])
                             proxy_items = [ProxyItem(**item) for item in raw_list]
                             return ProxyProcessBuyingResponse(

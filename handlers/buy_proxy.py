@@ -304,13 +304,13 @@ async def confirm_payment(callback: CallbackQuery, state: FSMContext):
             country = texts["country_" + proxy.country]
             date_end = proxy.date_end.strftime("%d.%m.%Y %H:%M") if proxy.date_end else "—"
             proxy_text = (
-                f"🔢 #{idx}\n"
-                f"🌐 '{proxy.host}:{proxy.port}'\n"
-                f"🔢 #{proxy.version}\n"
-                f"📍 {country} | 🛠 {proxy.type.upper()}\n"
-                f"⏳ До: {date_end}"
+                f"<b>IP: </b>{proxy.host}:{proxy.port}\n"
+                f"<b>{texts['type']}: </b>{proxy.type.upper()}\n"
+                f"<b>{texts['version']}: </b>{proxy.version}\n"
+                f"<b>{texts['country']}: </b>{country}\n"
+                f"<b>{texts['time_to']}: </b>{date_end}"
             )
-            await callback.message.answer(proxy_text, parse_mode="Markdown")
+            await callback.message.answer(proxy_text, parse_mode="HTML")
 
         menu = await get_main_menu(state)
         await callback.message.answer(text, reply_markup=menu)
