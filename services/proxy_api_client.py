@@ -1,7 +1,8 @@
 from aiohttp import ClientSession, ClientError
 from typing import List
 from typing import Optional
-from config import API_BASE_URL
+from config import API_BASE_URL, SERVER_BASE_URL
+from aiogram.types import URLInputFile
 from aiogram.fsm.context import FSMContext
 from data.locales import get_text
 import logging
@@ -17,6 +18,7 @@ ADDRESS_REGEX = re.compile(r"^\d{1,3}(\.\d{1,3}){3}:\d{1,5}$")
 class ProxyAPIClient:
     def __init__(self):
         self.base_url = API_BASE_URL
+        self.server_url = SERVER_BASE_URL
 
     async def get_countries(self, proxy_version: str) -> List[str]:
         """
@@ -199,6 +201,39 @@ class ProxyAPIClient:
                 ) as response:
                     if response.status == 200:
                         return await response.json()
+                    else:
+                        return {
+                            "success": False,
+                            "status_code": response.status,
+                            "error": "Server returned error"
+                        }
+        except ClientError as e:
+            return {
+                "success": False,
+                "status_code": 500,
+                "error": f"Request failed: {e}"
+            }
+
+    async def get_link_my_proxy(self, telegram_id: int, file_type: str):
+        if file_type == "csv":
+            file = "csv"
+        else:
+            file = "xls"
+
+        try:
+            async with ClientSession() as session:
+                async with session.post(
+                        f"{self.base_url}/get-link-proxy",
+                        json={"telegram_id": str(telegram_id), "file_type": file}
+                ) as response:
+                    if response.status == 200:
+                        result = await response.json()
+                        file_url = result['file_url']
+                        return {
+                            "success": result["success"],
+                            "status_code": result["status_code"],
+                            "file_url": URLInputFile(f"{self.server_url}{file_url}", filename="proxies."+file)
+                        }
                     else:
                         return {
                             "success": False,

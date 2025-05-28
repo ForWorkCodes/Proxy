@@ -9,6 +9,7 @@ from services.proxy_api_client import ProxyAPIClient
 
 router = Router()
 
+
 @router.callback_query(F.data == "my_proxy")
 async def my_proxy(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.message.delete()
@@ -36,16 +37,17 @@ async def my_proxy(callback: CallbackQuery, state: FSMContext) -> None:
                 country = texts["country_" + proxy.country]
                 date_end = proxy.date_end.strftime("%d.%m.%Y %H:%M") if proxy.date_end else "—"
                 proxy_text = (
-                    f"🔢 #{idx}\n"
-                    f"🌐 '{proxy.host}:{proxy.port}'\n"
-                    f"🔢 #{proxy.version}\n"
-                    f"📍 {country} | 🛠 {proxy.type.upper()}\n"
-                    f"⏳ До: {date_end}"
+                    f"<b>IP: </b>{proxy.host}:{proxy.port}\n"
+                    f"<b>{texts['type']}: </b>{proxy.type.upper()}\n"
+                    f"<b>{texts['version']}: </b>{proxy.version}\n"
+                    f"<b>{texts['country']}: </b>{country}\n"
+                    f"<b>{texts['time_to']}: </b>{date_end}"
                 )
-                await callback.message.answer(proxy_text, parse_mode="Markdown")
+                await callback.message.answer(proxy_text, parse_mode="HTML")
 
             menu = await get_main_menu(state)
             await callback.message.answer(text=texts['menu_title'], reply_markup=menu)
+
 
 @router.callback_query(F.data == "test_add_proxy")
 async def test_add_proxy(callback: CallbackQuery, state: FSMContext) -> None:
@@ -61,14 +63,25 @@ async def test_add_proxy(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.message.answer("Тестовое прокси добавлено")
     await callback.message.answer(text=texts['menu_title'], reply_markup=main_menu)
 
+
 @router.callback_query(F.data == "download_proxies_csv")
 async def download_proxies_csv(callback: CallbackQuery, state: FSMContext) -> None:
     texts = await get_texts(state)
     main_menu = await get_main_menu(state)
     await callback.answer()
     await callback.message.delete()
-    await callback.message.answer(text="Скачано")
+
+    service = ProxyAPIClient()
+    response = await service.get_link_my_proxy(callback.from_user.id, "csv")
+
+    if not response["success"]:
+        await callback.message.answer(text=texts["Error"])
+    else:
+        print(response["file_url"])
+        await callback.message.answer_document(response["file_url"])
+
     await callback.message.answer(text=texts['menu_title'], reply_markup=main_menu)
+
 
 @router.callback_query(F.data == "download_proxies_xls")
 async def download_proxies_xls(callback: CallbackQuery, state: FSMContext) -> None:
@@ -76,7 +89,15 @@ async def download_proxies_xls(callback: CallbackQuery, state: FSMContext) -> No
     main_menu = await get_main_menu(state)
     await callback.answer()
     await callback.message.delete()
-    await callback.message.answer(text="Скачано")
+
+    service = ProxyAPIClient()
+    response = await service.get_link_my_proxy(callback.from_user.id, "xls")
+
+    if not response["success"]:
+        await callback.message.answer(text=texts["Error"])
+    else:
+        await callback.message.answer_document(response["file_url"])
+
     await callback.message.answer(text=texts['menu_title'], reply_markup=main_menu)
 
 
