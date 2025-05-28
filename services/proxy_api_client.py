@@ -1,7 +1,7 @@
 from aiohttp import ClientSession, ClientError
 from typing import List
 from typing import Optional
-from config import API_BASE_URL, SERVER_BASE_URL
+from config import API_BASE_URL, SERVER_BASE_URL, INTERNAL_API_TOKEN
 from aiogram.types import URLInputFile
 from aiogram.fsm.context import FSMContext
 from data.locales import get_text
@@ -19,6 +19,9 @@ class ProxyAPIClient:
     def __init__(self):
         self.base_url = API_BASE_URL
         self.server_url = SERVER_BASE_URL
+        self.headers = {
+            "X-Internal-Token": INTERNAL_API_TOKEN
+        }
 
     async def get_countries(self, proxy_version: str) -> List[str]:
         """
@@ -27,7 +30,7 @@ class ProxyAPIClient:
         params = {"version": proxy_version}
 
         try:
-            async with ClientSession() as session:
+            async with ClientSession(headers=self.headers) as session:
                 async with session.get(f"{self.base_url}/countries", params=params) as response:
                     if response.status == 200:
                         data = await response.json()
@@ -75,7 +78,7 @@ class ProxyAPIClient:
         """
 
         try:
-            async with ClientSession() as session:
+            async with ClientSession(headers=self.headers) as session:
                 async with session.get(f"{self.base_url}/availability", params=dto.dict()) as response:
                     if response.status == 200:
                         data = await response.json()
@@ -95,7 +98,7 @@ class ProxyAPIClient:
 
     async def check_price(self, dto: ProxyGetPriceDTO) -> ProxyGetPriceResponse:
         try:
-            async with ClientSession() as session:
+            async with ClientSession(headers=self.headers) as session:
                 async with session.get(f"{self.base_url}/get_price", params=dto.dict()) as response:
                     if response.status == 200:
                         data = await response.json()
@@ -117,7 +120,7 @@ class ProxyAPIClient:
         status_code = 404
         error = ""
         try:
-            async with ClientSession() as session:
+            async with ClientSession(headers=self.headers) as session:
                 async with session.post(f"{self.base_url}/buy_proxy", json=dto.dict()) as response:
                     if response.status == 200:
                         data = await response.json()
@@ -155,7 +158,7 @@ class ProxyAPIClient:
     async def get_my_list_proxy(self, telegram_id: int) -> ProxyUsersListResponse:
         status_code = 404
         try:
-            async with ClientSession() as session:
+            async with ClientSession(headers=self.headers) as session:
                 async with session.post(
                         f"{self.base_url}/get-proxy-telegram-id",
                         json={"telegram_id": str(telegram_id)}
@@ -194,7 +197,7 @@ class ProxyAPIClient:
             }
 
         try:
-            async with ClientSession() as session:
+            async with ClientSession(headers=self.headers) as session:
                 async with session.post(
                         f"{self.base_url}/checker-proxy",
                         json={"telegram_id": str(telegram_id), "address": address}
@@ -221,7 +224,7 @@ class ProxyAPIClient:
             file = "xls"
 
         try:
-            async with ClientSession() as session:
+            async with ClientSession(headers=self.headers) as session:
                 async with session.post(
                         f"{self.base_url}/get-link-proxy",
                         json={"telegram_id": str(telegram_id), "file_type": file}
@@ -249,7 +252,7 @@ class ProxyAPIClient:
 
     async def get_user(self, telegram_id: int) -> Optional[dict]:
         try:
-            async with ClientSession() as session:
+            async with ClientSession(headers=self.headers) as session:
                 async with session.get(f"{self.base_url}/user/by-telegram-id/{str(telegram_id)}") as resp:
                     if resp.status == 200:
                         return await resp.json()
@@ -260,7 +263,7 @@ class ProxyAPIClient:
 
     async def get_balance(self, telegram_id: int) -> Optional[dict]:
         try:
-            async with ClientSession() as session:
+            async with ClientSession(headers=self.headers) as session:
                 async with session.get(f"{self.base_url}/user/get_balance/{str(telegram_id)}") as resp:
                     if resp.status == 200:
                         return await resp.json()
@@ -271,7 +274,7 @@ class ProxyAPIClient:
 
     async def upsert_user(self, dto: UserUpsertDTO) -> Optional[dict]:
         try:
-            async with ClientSession() as session:
+            async with ClientSession(headers=self.headers) as session:
                 async with session.post(f"{self.base_url}/user/upsert", json=dto.dict()) as resp:
                     if resp.status == 200:
                         return await resp.json()
@@ -282,7 +285,7 @@ class ProxyAPIClient:
 
     async def update_language(self, telegram_id: int, lang: str):
         try:
-            async with ClientSession() as session:
+            async with ClientSession(headers=self.headers) as session:
                 await session.patch(
                     f"{self.base_url}/user/{telegram_id}/language",
                     json={"language": lang}
@@ -292,7 +295,7 @@ class ProxyAPIClient:
 
     async def update_notification(self, telegram_id: int, notification: bool):
         try:
-            async with ClientSession() as session:
+            async with ClientSession(headers=self.headers) as session:
                 await session.patch(
                     f"{self.base_url}/user/{telegram_id}/notification",
                     json={"notification": notification}
