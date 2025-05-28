@@ -27,6 +27,7 @@ class UserService:
                 "username": user_db['username'],
                 "firstname": user_db['firstname'],
                 "language": user_db['language'],
+                "notification": user_db['notification'],
                 "active": user_db['active'],
                 "banned": user_db['banned']
             }
@@ -37,7 +38,10 @@ class UserService:
                 chat_id=str(message.chat.id),
                 username=message.from_user.username,
                 firstname=message.from_user.first_name,
-                language=resolved_lang
+                language=resolved_lang,
+                active=True,
+                banned=False,
+                notification=False
             )
             user = await self.proxy_api_client.upsert_user(dto)
 
@@ -61,6 +65,16 @@ class UserService:
             user = data["user"]
             user["language"] = lang
             print("language updated: ", lang)
+            await state.update_data(user=user)
+
+    async def update_user_notification(self, user_id: int, notification: bool, state: FSMContext) -> None:
+        await self.proxy_api_client.update_notification(user_id, notification)
+        data = await state.get_data()
+
+        if "user" in data:
+            user = data["user"]
+            user["notification"] = notification
+            print("notification updated: ", notification)
             await state.update_data(user=user)
 
     async def get_balance(self, user_id: int) -> dict:

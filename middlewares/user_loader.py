@@ -17,6 +17,9 @@ class UserLoaderMiddleware(BaseMiddleware):
         state = data['state']
         user_service = UserService()
 
+        if not hasattr(event, "from_user") or event.from_user is None:
+            return await handler(event, data)
+
         if isinstance(event, CallbackQuery):
             user = event.from_user
             message = event.message

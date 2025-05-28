@@ -76,6 +76,10 @@ async def enable_sms_notification(callback: CallbackQuery, state: FSMContext) ->
     main_menu = await get_main_menu(state)
     await callback.answer()
     await callback.message.delete()
+
+    user_service = UserService()
+    await user_service.update_user_notification(callback.from_user.id, True, state)
+
     await callback.message.answer(text=texts['sms_enabled'])
     await callback.message.answer(text=texts['menu_title'], reply_markup=main_menu)
 
@@ -86,5 +90,9 @@ async def disable_sms_notification(callback: CallbackQuery, state: FSMContext) -
     main_menu = await get_main_menu(state)
     await callback.answer()
     await callback.message.delete()
+
+    user_service = UserService()
+    await user_service.update_user_notification(callback.from_user.id, False, state)
+
     await callback.message.answer(text=texts['sms_disabled'])
     await callback.message.answer(text=texts['menu_title'], reply_markup=main_menu)

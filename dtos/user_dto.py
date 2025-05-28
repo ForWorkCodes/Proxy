@@ -8,3 +8,5 @@ class UserUpsertDTO(BaseModel):
     username: Optional[str]
     firstname: Optional[str]
     language: str
+    active: bool
+    notification: bool

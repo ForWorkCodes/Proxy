@@ -254,3 +254,13 @@ class ProxyAPIClient:
                 )
         except ClientError as e:
             logger.error(f"API error in update_language: {e}")
+
+    async def update_notification(self, telegram_id: int, notification: bool):
+        try:
+            async with ClientSession() as session:
+                await session.patch(
+                    f"{self.base_url}/user/{telegram_id}/notification",
+                    json={"notification": notification}
+                )
+        except ClientError as e:
+            logger.error(f"API error in update_notification: {e}")
