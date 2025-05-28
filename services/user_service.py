@@ -66,7 +66,7 @@ class UserService:
     async def get_balance(self, user_id: int) -> dict:
         user = await proxy_api_client.get_balance(user_id)
 
-        if not user or not user["amount"]:
+        if not user or "amount" not in user:
             return {
                 "success": False
             }
