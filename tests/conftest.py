@@ -6,4 +6,4 @@ from pathlib import Path
 project_root = str(Path(__file__).parent.parent)
 
 # Add the project root directory to Python path
-sys.path.insert(0, project_root) 
+sys.path.insert(0, project_root)

@@ -3,6 +3,7 @@ from aiogram.fsm.context import FSMContext
 from data.locales import get_texts, get_text
 from services.proxy_api_client import ProxyAPIClient
 from aiogram.exceptions import TelegramBadRequest
+from dtos.proxy_dto import ProxyItem
 
 
 async def make_back_keyboard(state: FSMContext) -> ReplyKeyboardMarkup:
@@ -168,3 +169,23 @@ async def confirm_proxy_keyboard(state: FSMContext):
         [InlineKeyboardButton(text=texts["Yes, pay"], callback_data="pay_yes")],
         [InlineKeyboardButton(text=texts["Cancel"], callback_data="pay_cancel")],
     ])
+
+
+async def proxy_checker_list(state: FSMContext, proxy_list: list[ProxyItem]):
+    columns = 2
+    buttons = []
+    for proxy in proxy_list:
+        text = f"{proxy.host}:{proxy.port}"
+        buttons.append(KeyboardButton(text=text))
+
+    keyboard = []
+    for i in range(0, len(buttons), columns):
+        keyboard.append(buttons[i:i + columns])
+
+    main_menu_text = await get_text(state, 'main_menu_btn')
+    keyboard.append([KeyboardButton(text=main_menu_text)])
+
+    return ReplyKeyboardMarkup(
+        keyboard=keyboard,
+        resize_keyboard=True,
+        one_time_keyboard=True)

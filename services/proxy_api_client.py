@@ -5,11 +5,13 @@ from config import API_BASE_URL
 from aiogram.fsm.context import FSMContext
 from data.locales import get_text
 import logging
+import re
 from dtos.user_dto import UserUpsertDTO
 from dtos.proxy_dto import ProxyAvailabilityDTO, ProxyAvailabilityResponse, ProxyGetPriceDTO,\
     ProxyGetPriceResponse, ProxyProcessBuyingDTO, ProxyProcessBuyingResponse, ProxyUsersListResponse, ProxyItem
 
 logger = logging.getLogger(__name__)
+ADDRESS_REGEX = re.compile(r"^\d{1,3}(\.\d{1,3}){3}:\d{1,5}$")
 
 
 class ProxyAPIClient:
@@ -152,7 +154,10 @@ class ProxyAPIClient:
         status_code = 404
         try:
             async with ClientSession() as session:
-                async with session.get(f"{self.base_url}/get-proxy-telegram-id/{str(telegram_id)}") as response:
+                async with session.post(
+                        f"{self.base_url}/get-proxy-telegram-id",
+                        json={"telegram_id": str(telegram_id)}
+                ) as response:
                     if response.status == 200:
                         data = await response.json()
                         if data.get("success"):
@@ -177,6 +182,35 @@ class ProxyAPIClient:
             error=error,
             list=[]
         )
+
+    async def check_my_proxy(self, telegram_id: int, address: str):
+        if not ADDRESS_REGEX.match(address):
+            return {
+                "success": False,
+                "status_code": 400,
+                "error": "Invalid address format. Expected IP:PORT"
+            }
+
+        try:
+            async with ClientSession() as session:
+                async with session.post(
+                        f"{self.base_url}/checker-proxy",
+                        json={"telegram_id": str(telegram_id), "address": address}
+                ) as response:
+                    if response.status == 200:
+                        return await response.json()
+                    else:
+                        return {
+                            "success": False,
+                            "status_code": response.status,
+                            "error": "Server returned error"
+                        }
+        except ClientError as e:
+            return {
+                "success": False,
+                "status_code": 500,
+                "error": f"Request failed: {e}"
+            }
 
     async def get_user(self, telegram_id: int) -> Optional[dict]:
         try:

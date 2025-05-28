@@ -1,7 +1,7 @@
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
-from states.buy_proxy import BuyProxy
+from states.proxy import BuyProxy
 from data.locales import get_text, get_texts
 from dtos.proxy_dto import ProxyAvailabilityDTO, ProxyGetPriceDTO, ProxyProcessBuyingDTO
 from keyboards.menus import (

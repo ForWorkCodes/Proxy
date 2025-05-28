@@ -1,5 +1,6 @@
 from aiogram.fsm.state import State, StatesGroup
 
+
 class BuyProxy(StatesGroup):
     Type = State()
     Country = State()
@@ -7,3 +8,7 @@ class BuyProxy(StatesGroup):
     SelectPeriod = State()
     ConfirmAvailability = State()
     PaymentProcess = State()
+
+
+class CheckerProxy(StatesGroup):
+    Choose = State()
