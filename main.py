@@ -1,4 +1,3 @@
-import logging
 import asyncio
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -14,10 +13,9 @@ from handlers.checker import router as checker_router
 from handlers.my_proxy import router as my_proxy_router
 from middlewares.user_loader import UserLoaderMiddleware
 
+from logger import logger
 
 async def main():
-    logging.basicConfig(level=logging.INFO)
-
     bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher(storage=MemoryStorage())
 

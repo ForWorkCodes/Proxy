@@ -96,3 +96,12 @@ async def disable_sms_notification(callback: CallbackQuery, state: FSMContext) -
 
     await callback.message.answer(text=texts['sms_disabled'])
     await callback.message.answer(text=texts['menu_title'], reply_markup=main_menu)
+
+
+@router.callback_query(F.data == "main_menu_btn")
+async def main_menu_btn(callback: CallbackQuery, state: FSMContext) -> None:
+    texts = await get_texts(state)
+    main_menu = await get_main_menu(state)
+    await callback.answer()
+    await callback.message.delete()
+    await callback.message.answer(text=texts['menu_title'], reply_markup=main_menu)

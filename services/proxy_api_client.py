@@ -272,6 +272,41 @@ class ProxyAPIClient:
             logger.error(f"API error in get_user: {e}")
             return None
 
+    async def get_link_topup(self, telegram_id: int, provider: str, amount: float):
+        try:
+            async with ClientSession(headers=self.headers) as session:
+                print({"telegram_id": str(telegram_id), "provider": provider, "amount": amount})
+                async with session.post(
+                        f"{self.base_url}/get-link-topup",
+                        json={"telegram_id": str(telegram_id), "provider": provider, "amount": amount}
+                ) as response:
+                    if response.status == 200:
+                        result = await response.json()
+                        if result["success"]:
+                            return {
+                                "success": result["success"],
+                                "status_code": result["status_code"],
+                                "topup_url": result["topup_url"]
+                            }
+                        else:
+                            status_code = result["status_code"]
+                            error = result["error"]
+                    else:
+                        return {
+                            "success": False,
+                            "status_code": response.status,
+                            "error": "Server returned error"
+                        }
+        except ClientError as e:
+            error = f"API request get_link_topup failed: {e}"
+            logger.error(f"API request get_link_topup failed: {e}")
+
+        return {
+            "success": False,
+            "status_code": status_code,
+            "error": error
+        }
+
     async def upsert_user(self, dto: UserUpsertDTO) -> Optional[dict]:
         try:
             async with ClientSession(headers=self.headers) as session:

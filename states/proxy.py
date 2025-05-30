@@ -12,3 +12,8 @@ class BuyProxy(StatesGroup):
 
 class CheckerProxy(StatesGroup):
     Choose = State()
+
+
+class TopUp(StatesGroup):
+    TypeTopUp = State()
+    AmountTopUp = State()

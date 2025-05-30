@@ -50,6 +50,7 @@ async def get_settings_menu(state: FSMContext):
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=texts['language'], callback_data="change_language")],
         [InlineKeyboardButton(text=texts['notifications'], callback_data="change_notifications")],
+        [InlineKeyboardButton(text=texts['back'], callback_data="main_menu_btn")],
     ])
 
 
@@ -79,15 +80,17 @@ async def get_menu_sms_notification(state: FSMContext):
 async def get_balance_menu(state: FSMContext):
     texts = await get_texts(state)
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=texts["top_up_balance"], callback_data="top_up_balance_menu")]
+        [InlineKeyboardButton(text=texts["top_up_balance"], callback_data="top_up_balance_menu")],
+        [InlineKeyboardButton(text=texts["back"], callback_data="main_menu_btn")],
     ])
 
 
 async def get_top_up_balance_menu(state: FSMContext):
     texts = await get_texts(state)
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=texts["spb"], callback_data="spb_top_up")],
-        [InlineKeyboardButton(text=texts["krypto"], callback_data="krypto_top_up")],
+        #[InlineKeyboardButton(text=texts["spb"], callback_data="spb_top_up")],
+        [InlineKeyboardButton(text=texts["crypto"], callback_data="crypto_top_up")],
+        [InlineKeyboardButton(text=texts["back"], callback_data="main_menu_btn")],
     ])
 
 
@@ -96,14 +99,16 @@ async def empty_proxy_menu(state: FSMContext):
     texts = await get_texts(state)
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=texts["buy_proxy?"], callback_data="buy_proxy")],
-        [InlineKeyboardButton(text=texts["test_add_proxy"], callback_data="test_add_proxy")]
+        [InlineKeyboardButton(text=texts["back"], callback_data="main_menu_btn")]
     ])
 
 
 async def download_proxies_keyboard(state: FSMContext):
+    texts = await get_texts(state)
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=".csv", callback_data="download_proxies_csv")],
-        [InlineKeyboardButton(text=".xls", callback_data="download_proxies_xls")]
+        [InlineKeyboardButton(text=".xls", callback_data="download_proxies_xls")],
+        [InlineKeyboardButton(text=texts["back"], callback_data="main_menu_btn")],
     ])
 
 
@@ -189,3 +194,26 @@ async def proxy_checker_list(state: FSMContext, proxy_list: list[ProxyItem]):
         keyboard=keyboard,
         resize_keyboard=True,
         one_time_keyboard=True)
+
+
+async def top_up_amount_list(state: FSMContext):
+    texts = await get_texts(state)
+
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="100 " + texts["rub_symbol"], callback_data="amount_100.0"),
+            InlineKeyboardButton(text="200 " + texts["rub_symbol"], callback_data="amount_200.0")
+        ],
+        [
+            InlineKeyboardButton(text="400 " + texts["rub_symbol"], callback_data="amount_400.0"),
+            InlineKeyboardButton(text="500 " + texts["rub_symbol"], callback_data="amount_500.0")
+        ],
+        [
+            InlineKeyboardButton(text="1000 " + texts["rub_symbol"], callback_data="amount_1000.0"),
+            InlineKeyboardButton(text="1500 " + texts["rub_symbol"], callback_data="amount_1500.0")
+        ],
+        [
+            InlineKeyboardButton(text="2000 " + texts["rub_symbol"], callback_data="amount_2000.0"),
+            InlineKeyboardButton(text=texts["back"], callback_data="amount_back")
+        ]
+    ])
