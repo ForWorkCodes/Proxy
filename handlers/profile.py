@@ -80,12 +80,13 @@ async def select_amount(callback: CallbackQuery, state: FSMContext):
 
     service = ProxyAPIClient()
     response = await service.get_link_topup(callback.from_user.id, provider, amount)
+
     if not response["success"]:
         await callback.message.answer(response["error"])
     else:
         link = response["topup_url"]
         if link:
-            await callback.message.answer(f"{texts['link_pay']}: {link}")
+            await callback.message.answer(f"{texts['link_pay']} ({amount} {texts['rub_symbol']}): {link}")
         else:
             await callback.message.answer(texts['Error'])
 
