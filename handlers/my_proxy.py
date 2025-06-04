@@ -1,9 +1,10 @@
 from aiogram import Router, F
 from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
-from data.locales import get_texts, get_text
+from data.locales import get_texts
+from utils.telegram import safe_delete_message
 from keyboards.menus import (
-    get_main_menu, empty_proxy_menu, download_proxies_keyboard, get_start_menu
+    get_main_menu, empty_proxy_menu, download_proxies_keyboard
 )
 from services.proxy_api_client import ProxyAPIClient
 
@@ -12,7 +13,7 @@ router = Router()
 
 @router.callback_query(F.data == "my_proxy")
 async def my_proxy(callback: CallbackQuery, state: FSMContext) -> None:
-    await callback.message.delete()
+    await safe_delete_message(callback)
     service = ProxyAPIClient()
     response = await service.get_my_list_proxy(callback.from_user.id)
     texts = await get_texts(state)
@@ -59,7 +60,7 @@ async def test_add_proxy(callback: CallbackQuery, state: FSMContext) -> None:
     await state.update_data(data)
 
     await callback.answer()
-    await callback.message.delete()
+    await safe_delete_message(callback)
     await callback.message.answer("Тестовое прокси добавлено")
     await callback.message.answer(text=texts['menu_title'], reply_markup=main_menu)
 
@@ -69,7 +70,7 @@ async def download_proxies_csv(callback: CallbackQuery, state: FSMContext) -> No
     texts = await get_texts(state)
     main_menu = await get_main_menu(state)
     await callback.answer()
-    await callback.message.delete()
+    await safe_delete_message(callback)
 
     service = ProxyAPIClient()
     response = await service.get_link_my_proxy(callback.from_user.id, "csv")
@@ -88,7 +89,7 @@ async def download_proxies_xls(callback: CallbackQuery, state: FSMContext) -> No
     texts = await get_texts(state)
     main_menu = await get_main_menu(state)
     await callback.answer()
-    await callback.message.delete()
+    await safe_delete_message(callback)
 
     service = ProxyAPIClient()
     response = await service.get_link_my_proxy(callback.from_user.id, "xls")

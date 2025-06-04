@@ -5,8 +5,9 @@ from data.locales import get_texts
 from states.proxy import CheckerProxy
 from dtos.proxy_dto import ProxyItem
 from services.proxy_api_client import ProxyAPIClient
+from utils.telegram import safe_delete_message
 from keyboards.menus import (
-    get_main_menu, empty_proxy_menu, proxy_checker_list, get_start_menu
+    get_main_menu, empty_proxy_menu, proxy_checker_list
 )
 
 router = Router()
@@ -17,7 +18,7 @@ async def checker(callback: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(CheckerProxy.Choose)
     texts = await get_texts(state)
     await callback.answer()
-    await callback.message.delete()
+    await safe_delete_message(callback)
 
     service = ProxyAPIClient()
     response = await service.get_my_list_proxy(callback.from_user.id)

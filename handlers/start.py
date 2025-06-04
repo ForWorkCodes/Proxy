@@ -8,11 +8,13 @@ from aiogram.filters import StateFilter
 
 router = Router()
 
+
 @router.message(CommandStart())
 async def command_start_handler(message: Message, state: FSMContext) -> None:
     first_hello = await get_text(state, 'first_hello')
     menu = await get_main_menu(state)
     await message.answer(f"{first_hello}, <b>{message.from_user.full_name}!</b>", reply_markup=menu  )
+
 
 @router.message(StateFilter(None))
 async def main_menu_handler(message: Message, state: FSMContext):

@@ -3,6 +3,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from states.proxy import BuyProxy
 from data.locales import get_text, get_texts
+from utils.telegram import safe_delete_message
 from dtos.proxy_dto import ProxyAvailabilityDTO, ProxyGetPriceDTO, ProxyProcessBuyingDTO
 from keyboards.menus import (
     proxy_type_keyboard, get_countries_list_keyboard,
@@ -30,7 +31,7 @@ async def buy_proxy(callback: CallbackQuery, state: FSMContext) -> None:
     text = await get_text(state, 'select_proxy_type')
     proxy_type_menu = await proxy_type_keyboard(state)
     await callback.answer()
-    await callback.message.delete()
+    await safe_delete_message(callback)
     await callback.message.answer(text, reply_markup=proxy_type_menu)
 
 
@@ -39,7 +40,7 @@ async def select_type(callback: CallbackQuery, state: FSMContext):
     if callback.data == "type_back":
         await state.clear()
         await callback.answer()
-        await callback.message.delete()
+        await safe_delete_message(callback)
         text = await get_text(state, 'main_menu_btn')
         main_menu = await get_main_menu(state)
         await callback.message.answer(text, reply_markup=main_menu)
@@ -50,7 +51,7 @@ async def select_type(callback: CallbackQuery, state: FSMContext):
     await state.set_state(BuyProxy.Country)
 
     await callback.answer()
-    await callback.message.delete()
+    await safe_delete_message(callback)
 
     text = await get_text(state, 'select_country')
     keyboard = await get_countries_list_keyboard(state)
@@ -68,7 +69,7 @@ async def select_type(callback: CallbackQuery, state: FSMContext):
 async def select_country(message: Message, state: FSMContext):
     if message.text == await get_text(state, 'back'):
         await state.set_state(BuyProxy.Type)
-        await message.delete()
+        await safe_delete_message(message)
         text = await get_text(state, 'select_proxy_type')
         proxy_type_menu = await proxy_type_keyboard(state)
         await message.answer(text, reply_markup=proxy_type_menu)
@@ -105,7 +106,7 @@ async def select_country(message: Message, state: FSMContext):
 async def select_quantity(message: Message, state: FSMContext):
     if message.text == await get_text(state, 'back'):
         await state.set_state(BuyProxy.Country)
-        await message.delete()
+        await safe_delete_message(message)
         text = await get_text(state, 'select_country')
         keyboard = await get_countries_list_keyboard(state)
         await message.answer(text, reply_markup=keyboard)
@@ -173,7 +174,7 @@ async def select_quantity(message: Message, state: FSMContext):
 async def select_period(message: Message, state: FSMContext):
     if message.text == await get_text(state, 'back'):
         await state.set_state(BuyProxy.Quantity)
-        await message.delete()
+        await safe_delete_message(message)
         text = await get_text(state, 'enter_proxy_quantity')
         keyboard = await make_back_keyboard(state)
         await message.answer(text, reply_markup=keyboard)
@@ -245,7 +246,7 @@ async def select_period(message: Message, state: FSMContext):
 @router.callback_query(BuyProxy.ConfirmAvailability, F.data == "pay_yes")
 async def confirm_payment(callback: CallbackQuery, state: FSMContext):
     await state.set_state(None)
-    await callback.message.delete()
+    await safe_delete_message(callback)
     await state.set_state(BuyProxy.PaymentProcess)
 
     texts = await get_texts(state)
@@ -270,19 +271,19 @@ async def confirm_payment(callback: CallbackQuery, state: FSMContext):
         error_text = texts["api_error"]
         back_keyboard = await make_back_keyboard(state)
 
-        await msg.delete()
+        await safe_delete_message(msg)
         await callback.message.answer(error_text, reply_markup=back_keyboard)
         return
     except ValidationError as e:
         logger.warning(f"Validation failed: {e}")
         error_text = texts["wrong_quantity"]
 
-        await msg.delete()
+        await safe_delete_message(msg)
         await callback.message.answer(error_text)
         return
 
     response = await service.process_buying_proxy(dto)
-    await msg.delete()
+    await safe_delete_message(msg)
 
     if not response.success:
         if response.status_code == 4001:
