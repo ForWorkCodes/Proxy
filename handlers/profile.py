@@ -72,7 +72,7 @@ async def select_amount(callback: CallbackQuery, state: FSMContext):
     await safe_delete_message(callback)
 
     if callback.data == "amount_back":
-        await state.clear()
+        await state.set_state(None)
         topup_balance_menu = await get_top_up_balance_menu(state)
         await callback.message.answer(text=texts['choose'], reply_markup=topup_balance_menu)
         return

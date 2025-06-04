@@ -123,6 +123,15 @@ async def proxy_type_keyboard(state: FSMContext):
     ])
 
 
+async def proxy_httptype_keyboard(state: FSMContext):
+    texts = await get_texts(state)
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="SOCKS", callback_data="httptype_socks")],
+        [InlineKeyboardButton(text="HTTP", callback_data="httptype_http")],
+        [InlineKeyboardButton(text=texts["back"], callback_data="httptype_back")],
+    ])
+
+
 async def get_countries_list_keyboard(state: FSMContext):
     country_service = ProxyAPIClient()
     data = await state.get_data()

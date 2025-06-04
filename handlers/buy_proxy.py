@@ -8,7 +8,7 @@ from dtos.proxy_dto import ProxyAvailabilityDTO, ProxyGetPriceDTO, ProxyProcessB
 from keyboards.menus import (
     proxy_type_keyboard, get_countries_list_keyboard,
     confirm_proxy_keyboard, get_main_menu,
-    make_back_keyboard, get_balance_menu
+    make_back_keyboard, get_balance_menu, proxy_httptype_keyboard
 )
 from itertools import islice
 from pydantic import ValidationError
@@ -38,7 +38,6 @@ async def buy_proxy(callback: CallbackQuery, state: FSMContext) -> None:
 @router.callback_query(BuyProxy.Type, F.data.startswith("type_"))
 async def select_type(callback: CallbackQuery, state: FSMContext):
     if callback.data == "type_back":
-        await state.clear()
         await callback.answer()
         await safe_delete_message(callback)
         text = await get_text(state, 'main_menu_btn')
@@ -47,7 +46,29 @@ async def select_type(callback: CallbackQuery, state: FSMContext):
         return
     
     await state.update_data(proxy_version=callback.data.split("_")[1])
-    await state.update_data(proxy_type="socks")
+    await state.set_state(BuyProxy.HttpType)
+
+    await callback.answer()
+    await safe_delete_message(callback)
+
+    text = await get_text(state, 'select_proxy_httptype')
+    keyboard = await proxy_httptype_keyboard(state)
+
+    await callback.message.answer(text, reply_markup=keyboard)
+
+
+@router.callback_query(BuyProxy.HttpType, F.data.startswith("httptype_"))
+async def select_httptype(callback: CallbackQuery, state: FSMContext):
+    if callback.data == "httptype_back":
+        await state.set_state(BuyProxy.Type)
+        await callback.answer()
+        await safe_delete_message(callback)
+        text = await get_text(state, 'select_proxy_type')
+        proxy_type_menu = await proxy_type_keyboard(state)
+        await callback.message.answer(text, reply_markup=proxy_type_menu)
+        return
+
+    await state.update_data(proxy_type=callback.data.split("_")[1])
     await state.set_state(BuyProxy.Country)
 
     await callback.answer()
@@ -68,11 +89,11 @@ async def select_type(callback: CallbackQuery, state: FSMContext):
 @router.message(BuyProxy.Country)
 async def select_country(message: Message, state: FSMContext):
     if message.text == await get_text(state, 'back'):
-        await state.set_state(BuyProxy.Type)
+        await state.set_state(BuyProxy.HttpType)
         await safe_delete_message(message)
-        text = await get_text(state, 'select_proxy_type')
-        proxy_type_menu = await proxy_type_keyboard(state)
-        await message.answer(text, reply_markup=proxy_type_menu)
+        text = await get_text(state, 'select_proxy_httptype')
+        keyboard = await proxy_httptype_keyboard(state)
+        await message.answer(text, reply_markup=keyboard)
         return
     
     country_service = ProxyAPIClient()

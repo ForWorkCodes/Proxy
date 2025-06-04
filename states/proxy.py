@@ -3,6 +3,7 @@ from aiogram.fsm.state import State, StatesGroup
 
 class BuyProxy(StatesGroup):
     Type = State()
+    HttpType = State()
     Country = State()
     Quantity = State()
     SelectPeriod = State()
