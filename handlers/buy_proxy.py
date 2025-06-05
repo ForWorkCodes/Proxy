@@ -1,101 +1,373 @@
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
-from states.buy_proxy import BuyProxy
+from states.proxy import BuyProxy
 from data.locales import get_text, get_texts
+from utils.telegram import safe_delete_message
+from dtos.proxy_dto import ProxyAvailabilityDTO, ProxyGetPriceDTO, ProxyProcessBuyingDTO
 from keyboards.menus import (
     proxy_type_keyboard, get_countries_list_keyboard,
-    confirm_quantity_keyboard, payment_method_keyboard
+    confirm_proxy_keyboard, get_main_menu,
+    make_back_keyboard, get_balance_menu, proxy_httptype_keyboard
 )
 from itertools import islice
+from pydantic import ValidationError
+from services.proxy_api_client import ProxyAPIClient
+import logging
+
 
 def chunked(iterable, n):
     it = iter(iterable)
     return iter(lambda: list(islice(it, n)), [])
 
+
+logger = logging.getLogger(__name__)
 router = Router()
+
 
 @router.callback_query(F.data == "buy_proxy")
 async def buy_proxy(callback: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(BuyProxy.Type)
     text = await get_text(state, 'select_proxy_type')
+    proxy_type_menu = await proxy_type_keyboard(state)
     await callback.answer()
-    await callback.message.delete()
-    await callback.message.answer(text, reply_markup=proxy_type_keyboard())
+    await safe_delete_message(callback)
+    await callback.message.answer(text, reply_markup=proxy_type_menu)
+
 
 @router.callback_query(BuyProxy.Type, F.data.startswith("type_"))
 async def select_type(callback: CallbackQuery, state: FSMContext):
+    if callback.data == "type_back":
+        await callback.answer()
+        await safe_delete_message(callback)
+        text = await get_text(state, 'main_menu_btn')
+        main_menu = await get_main_menu(state)
+        await callback.message.answer(text, reply_markup=main_menu)
+        return
+    
+    await state.update_data(proxy_version=callback.data.split("_")[1])
+    await state.set_state(BuyProxy.HttpType)
+
+    await callback.answer()
+    await safe_delete_message(callback)
+
+    text = await get_text(state, 'select_proxy_httptype')
+    keyboard = await proxy_httptype_keyboard(state)
+
+    await callback.message.answer(text, reply_markup=keyboard)
+
+
+@router.callback_query(BuyProxy.HttpType, F.data.startswith("httptype_"))
+async def select_httptype(callback: CallbackQuery, state: FSMContext):
+    if callback.data == "httptype_back":
+        await state.set_state(BuyProxy.Type)
+        await callback.answer()
+        await safe_delete_message(callback)
+        text = await get_text(state, 'select_proxy_type')
+        proxy_type_menu = await proxy_type_keyboard(state)
+        await callback.message.answer(text, reply_markup=proxy_type_menu)
+        return
+
     await state.update_data(proxy_type=callback.data.split("_")[1])
     await state.set_state(BuyProxy.Country)
 
     await callback.answer()
-    await callback.message.delete()
+    await safe_delete_message(callback)
 
     text = await get_text(state, 'select_country')
     keyboard = await get_countries_list_keyboard(state)
+
+    if not keyboard:
+        error_text = await get_text(state, 'api_error')
+        back_keyboard = await make_back_keyboard(state)
+        await callback.message.answer(f"{error_text}", reply_markup=back_keyboard)
+        return
+
     await callback.message.answer(text, reply_markup=keyboard)
+
 
 @router.message(BuyProxy.Country)
 async def select_country(message: Message, state: FSMContext):
-    print(message.text)
-    await state.update_data(country=message.text)
+    if message.text == await get_text(state, 'back'):
+        await state.set_state(BuyProxy.HttpType)
+        await safe_delete_message(message)
+        text = await get_text(state, 'select_proxy_httptype')
+        keyboard = await proxy_httptype_keyboard(state)
+        await message.answer(text, reply_markup=keyboard)
+        return
+    
+    country_service = ProxyAPIClient()
+    country_dict = await country_service.get_country_dict(state)
+
+    # Найти код страны по вводу пользователя
+    selected_country_code = None
+    for code, name in country_dict.items():
+        if name.lower() == message.text.lower():
+            selected_country_code = code
+            break
+
+    if not selected_country_code:
+        # Страна не найдена — сообщаем и повторно показываем клавиатуру
+        warning_text = await get_text(state, 'wrong_message')
+        retry_text = await get_text(state, 'select_country')
+        keyboard = await get_countries_list_keyboard(state)
+
+        await message.answer(f"{warning_text}\n\n{retry_text}", reply_markup=keyboard)
+        return
+
+    await state.update_data(country=selected_country_code)
     await state.set_state(BuyProxy.Quantity)
+
     text = await get_text(state, 'enter_proxy_quantity')
-    await message.answer(text)
+    back_keyboard = await make_back_keyboard(state)
+    await message.answer(text, reply_markup=back_keyboard)
+
 
 @router.message(BuyProxy.Quantity)
 async def select_quantity(message: Message, state: FSMContext):
-    await state.update_data(quantity=message.text)
-    # Здесь можно вставить проверку наличия
-    await state.set_state(BuyProxy.ConfirmAvailability)
+    if message.text == await get_text(state, 'back'):
+        await state.set_state(BuyProxy.Country)
+        await safe_delete_message(message)
+        text = await get_text(state, 'select_country')
+        keyboard = await get_countries_list_keyboard(state)
+        await message.answer(text, reply_markup=keyboard)
+        return
+
+    quantity_str = message.text.strip()
+
+    # Проверяем, что это число и > 0
+    if not quantity_str.isdigit() or int(quantity_str) <= 0:
+        error_text = await get_text(state, 'wrong_quantity')
+        retry_text = await get_text(state, 'enter_proxy_quantity')
+        await message.answer(f"{error_text}\n\n{retry_text}")
+        return
+
+    quantity = int(quantity_str)
+    data = await state.get_data()
+
+    try:
+        dto = ProxyAvailabilityDTO(
+            telegram_id=message.from_user.id,
+            version=data.get("proxy_version"),
+            country=data.get("country"),
+            quantity=quantity
+        )
+    except KeyError as e:
+        logger.error(f"Missing field: {e}")
+        error_text = await get_text(state, 'api_error')
+        back_keyboard = await make_back_keyboard(state)
+        await message.answer(error_text, reply_markup=back_keyboard)
+        return
+    except ValidationError as e:
+        logger.warning(f"Validation failed: {e}")
+        error_text = await get_text(state, 'wrong_quantity')
+        await message.answer(error_text)
+        return
+
+    service = ProxyAPIClient()
+    response = await service.check_availability(dto)
+
+    if not response.success:
+        error_text = await get_text(state, 'api_error')
+        back_keyboard = await make_back_keyboard(state)
+        await message.answer(error_text, reply_markup=back_keyboard)
+        return
+
+    if not response.available:
+        not_available_text = await get_text(state, 'not_enough_proxies')
+        retry_text = await get_text(state, 'enter_proxy_quantity')
+        back_keyboard = await make_back_keyboard(state)
+        await message.answer(
+            f"{not_available_text}: {response.available_quantity}\n\n{retry_text}",
+            reply_markup=back_keyboard
+        )
+        return
+
+    await state.update_data(quantity=quantity)
+    await state.set_state(BuyProxy.SelectPeriod)
+
+    text = await get_text(state, 'select_period_days:')
+    back_keyboard = await make_back_keyboard(state)
+    await message.answer(text, reply_markup=back_keyboard)
+
+
+@router.message(BuyProxy.SelectPeriod)
+async def select_period(message: Message, state: FSMContext):
+    if message.text == await get_text(state, 'back'):
+        await state.set_state(BuyProxy.Quantity)
+        await safe_delete_message(message)
+        text = await get_text(state, 'enter_proxy_quantity')
+        keyboard = await make_back_keyboard(state)
+        await message.answer(text, reply_markup=keyboard)
+        return
+
+    days_str = message.text.strip()
+    days = int(days_str)
+
+    if days < 1 or days > 180:
+        error_text = await get_text(state, 'Error')
+        retry_text = await get_text(state, 'select_period_days:')
+        await message.answer(f"{error_text}\n\n{retry_text}")
+        return
+
+    await state.update_data(days=days)
+
+    data = await state.get_data()
+
+    try:
+        dto = ProxyGetPriceDTO(
+            telegram_id=message.from_user.id,
+            version=data.get("proxy_version"),
+            days=days,
+            quantity=data.get("quantity")
+        )
+    except KeyError as e:
+        logger.error(f"Missing field: {e}")
+        error_text = await get_text(state, 'api_error')
+        back_keyboard = await make_back_keyboard(state)
+        await message.answer(error_text, reply_markup=back_keyboard)
+        return
+    except ValidationError as e:
+        logger.warning(f"Validation failed: {e}")
+        error_text = await get_text(state, 'wrong_quantity')
+        await message.answer(error_text)
+        return
+
+    service = ProxyAPIClient()
+    response = await service.check_price(dto)
+
+    if not response.success:
+        error_text = await get_text(state, 'api_error')
+        back_keyboard = await make_back_keyboard(state)
+        await message.answer(error_text, reply_markup=back_keyboard)
+        return
+
+    if not response.available:
+        not_available_text = await get_text(state, 'proxy_not_available')
+        retry_text = await get_text(state, 'enter_proxy_quantity')
+        back_keyboard = await make_back_keyboard(state)
+        await message.answer(
+            f"{not_available_text}: \n\n{retry_text}",
+            reply_markup=back_keyboard
+        )
+        return
+
+    await state.update_data(price=response.total_price)
+
     text = await get_text(state, 'available_proceed_payment')
-
     summary = await get_proxy_summary(state)
-    await message.answer(f"{text}\n\n<b>Ваш выбор:</b>\n{summary}")
 
-    await message.answer(text, reply_markup=confirm_quantity_keyboard())
+    await state.set_state(BuyProxy.ConfirmAvailability)
+
+    menu = await confirm_proxy_keyboard(state)
+    await message.answer(f"<b>{await get_text(state, 'your_choice')}: </b>\n{summary}")
+    await message.answer(text, reply_markup=menu)
+
 
 @router.callback_query(BuyProxy.ConfirmAvailability, F.data == "pay_yes")
 async def confirm_payment(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(BuyProxy.PaymentChoice)
-    text = await get_text(state, 'select_payment_method')
-
-    summary = await get_proxy_summary(state)
-    await callback.message.answer(f"{text}\n\n<b>Ваш выбор:</b>\n{summary}")
-
-    await callback.message.answer(text, reply_markup=payment_method_keyboard())
-    await callback.answer()
-
-@router.callback_query(BuyProxy.PaymentChoice, F.data == "pay_balance")
-async def pay_with_balance(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(None)
+    await safe_delete_message(callback)
     await state.set_state(BuyProxy.PaymentProcess)
-    text_processing = await get_text(state, 'deducting_from_balance')
-    await callback.message.answer(text_processing)
 
-    # Здесь должна быть логика оплаты
-    await state.set_state(BuyProxy.ProxyDelivery)
-    text_delivered = await get_text(state, 'proxy_delivered')
-    await callback.message.answer(text_delivered)
-    await callback.answer()
+    texts = await get_texts(state)
+
+    text = texts["deducting_from_balance"]
+    msg = await callback.message.answer(text)
+
+    service = ProxyAPIClient()
+    data = await state.get_data()
+
+    try:
+        dto = ProxyProcessBuyingDTO(
+            telegram_id=str(callback.from_user.id),
+            version=data.get("proxy_version"),
+            type=data.get("proxy_type"),
+            country=data.get("country"),
+            days=data.get("days"),
+            quantity=data.get("quantity")
+        )
+    except KeyError as e:
+        logger.error(f"Missing field: {e}")
+        error_text = texts["api_error"]
+        back_keyboard = await make_back_keyboard(state)
+
+        await safe_delete_message(msg)
+        await callback.message.answer(error_text, reply_markup=back_keyboard)
+        return
+    except ValidationError as e:
+        logger.warning(f"Validation failed: {e}")
+        error_text = texts["wrong_quantity"]
+
+        await safe_delete_message(msg)
+        await callback.message.answer(error_text)
+        return
+
+    response = await service.process_buying_proxy(dto)
+    await safe_delete_message(msg)
+
+    if not response.success:
+        if response.status_code == 4001:
+            error_text = texts["no_money_purshare?"]
+            keyboard = await get_balance_menu(state)
+        elif response.status_code == 210:
+            error_text = texts["error_days"]
+            keyboard = await get_main_menu(state)
+        else:
+            error_text = texts["api_error"]
+            keyboard = await get_main_menu(state)
+
+        await callback.message.answer(error_text, reply_markup=keyboard)
+    else:
+        text = texts["purchase_success"]
+        await callback.message.answer(text)
+
+        for idx, proxy in enumerate(response.list, start=1):
+            country = texts["country_" + proxy.country]
+            date_end = proxy.date_end.strftime("%d.%m.%Y %H:%M") if proxy.date_end else "—"
+            proxy_text = (
+                f"<b>IP: </b>{proxy.host}:{proxy.port}\n"
+                f"<b>{texts['type']}: </b>{proxy.type.upper()}\n"
+                f"<b>{texts['version']}: </b>{proxy.version}\n"
+                f"<b>{texts['country']}: </b>{country}\n"
+                f"<b>{texts['time_to']}: </b>{date_end}"
+            )
+            await callback.message.answer(proxy_text, parse_mode="HTML")
+
+        menu = await get_main_menu(state)
+        await callback.message.answer(text, reply_markup=menu)
+        await callback.answer()
+
 
 @router.callback_query(BuyProxy.ConfirmAvailability, F.data == "pay_cancel")
 async def cancel_payment(callback: CallbackQuery, state: FSMContext):
-    await state.clear()
+    await state.set_state(None)
     text = await get_text(state, 'purchase_cancelled')
-    await callback.message.answer(text)
+    menu = await get_main_menu(state)
+    await callback.message.answer(text, reply_markup=menu)
     await callback.answer()
+
 
 async def get_proxy_summary(state: FSMContext) -> str:
     data = await state.get_data()
+    texts = await get_texts(state)
+    country = texts["country_"+data['country']]
+    no_choose = texts['no_choose']
     lines = []
 
+    if "proxy_version" in data:
+        lines.append(f"{texts['version']}: <b>{data['proxy_version']}</b>")
     if "proxy_type" in data:
-        lines.append(f"🌐 Тип: <b>{data['proxy_type']}</b>")
+        lines.append(f"{texts['type']}: <b>{data['proxy_type']}</b>")
     if "country" in data:
-        lines.append(f"🏳️ Страна: <b>{data['country']}</b>")
+        lines.append(f"{texts['country']}: <b>{country}</b>")
     if "quantity" in data:
-        lines.append(f"🔢 Кол-во: <b>{data['quantity']}</b>")
+        lines.append(f"{texts['quantity']}: <b>{data['quantity']}</b>")
+    if "days" in data:
+        lines.append(f"{texts['days']}: <b>{data['days']}</b>")
+    if "price" in data:
+        lines.append(f"{texts['price']}: <b>{data['price']} RUB</b>")
 
     if not lines:
-        return "❗ Пока ничего не выбрано."
+        return no_choose
     return "\n".join(lines)

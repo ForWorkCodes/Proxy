@@ -1,12 +1,12 @@
 from aiogram import BaseMiddleware
-from asyncpg import Pool
 from typing import Callable, Awaitable, Dict, Any
 from aiogram.types import Message, CallbackQuery
-from services.user_service import create_user
+from services import UserService
+
 
 class UserLoaderMiddleware(BaseMiddleware):
-    def __init__(self, db_pool: Pool):
-        self.db_pool = db_pool
+    def __init__(self):
+        print("middleware")
 
     async def __call__(
         self,
@@ -15,6 +15,18 @@ class UserLoaderMiddleware(BaseMiddleware):
         data: Dict[str, Any]
     ) -> Any:
         state = data['state']
-        message = event.message if isinstance(event, CallbackQuery) else event
-        await create_user(message, self.db_pool, state)
+        user_service = UserService()
+
+        if not hasattr(event, "from_user") or event.from_user is None:
+            return await handler(event, data)
+
+        if isinstance(event, CallbackQuery):
+            user = event.from_user
+            message = event.message
+        else:
+            user = event.from_user
+            message = event
+
+        await user_service.create_user(user.id, message, state)
+
         return await handler(event, data)

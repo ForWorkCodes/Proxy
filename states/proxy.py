@@ -1,10 +1,20 @@
 from aiogram.fsm.state import State, StatesGroup
 
+
 class BuyProxy(StatesGroup):
     Type = State()
+    HttpType = State()
     Country = State()
     Quantity = State()
+    SelectPeriod = State()
     ConfirmAvailability = State()
-    PaymentChoice = State()
     PaymentProcess = State()
-    ProxyDelivery = State()
+
+
+class CheckerProxy(StatesGroup):
+    Choose = State()
+
+
+class TopUp(StatesGroup):
+    TypeTopUp = State()
+    AmountTopUp = State()
