@@ -60,6 +60,7 @@ texts = {
         "proxy_is_not_active": "Прокси не активно",
         "proxy_is_active": "Прокси активно",
         "rub_symbol": "₽",
+        "notification_proxy_expiring": "Данный прокси скоро закончиться",
         "proxy:": "Прокси:",
         "country_ru": "Россия",
         "country_ua": "Украина",
@@ -204,6 +205,7 @@ texts = {
         "proxy_is_not_active": "Proxy is not active",
         "proxy_is_active": "Proxy is active",
         "rub_symbol": "₽",
+        "notification_proxy_expiring": "This proxy will expire soon",
         "proxy:": "Proxy:",
         "country_ru": "Russia",
         "country_ua": "Ukraine",
@@ -293,11 +295,17 @@ texts = {
 
 DEFAULT_LANG = "en"
 
+
 async def get_texts(state: FSMContext) -> dict:
     data = await state.get_data()
     lang = data.get("user", {}).get("language", DEFAULT_LANG)
     return texts.get(lang, texts[DEFAULT_LANG])
 
+
 async def get_text(state: FSMContext, key: str) -> str:
     texts = await get_texts(state)
     return texts[key]
+
+
+def get_text_by_land(lang: str):
+    return texts.get(lang, texts[DEFAULT_LANG])

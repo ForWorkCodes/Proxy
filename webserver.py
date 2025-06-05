@@ -1,6 +1,8 @@
 import logging
 from aiohttp import web
 from config import INTERNAL_API_TOKEN
+from enums.notification_type import NotificationType
+from data.locales import get_text_by_land
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -22,15 +24,21 @@ async def handle_notify(request: web.Request) -> web.Response:
         logger.exception("Invalid JSON")
         return web.json_response({'success': False, 'error': 'Invalid JSON'}, status=400)
 
-    telegram_id = data.get('telegram_id') or data.get('user_id')
-    text = data.get('text') or data.get('message')
+    telegram_id = data.get('telegram_id')
+    data = data.get('data')
+    texts = get_text_by_land(data["language"])
 
     # Валидация данных
-    if not telegram_id or not text or not isinstance(text, str):
+    if not telegram_id or not data or not isinstance(data, dict):
         logger.warning("Missing or invalid fields")
         return web.json_response({'success': False, 'error': 'telegram_id and text are required'}, status=400)
 
     try:
+        if data["type"] == NotificationType.proxy_expiring:
+            text = texts["notification_" + NotificationType.proxy_expiring] + ": " + data["host"]
+        else:
+            text = data["text"]
+
         await bot.send_message(chat_id=int(telegram_id), text=text.strip())
         logger.info(f"Sent message to {telegram_id}")
         return web.json_response({'success': True})
