@@ -4,6 +4,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from config import BOT_TOKEN
+from webserver import start_webserver
 
 from handlers.start import router as start_router
 from handlers.buy_proxy import router as buy_proxy_router
@@ -26,9 +27,14 @@ async def main():
     dp.message.middleware(UserLoaderMiddleware())
     dp.callback_query.middleware(UserLoaderMiddleware())
 
+    runner = await start_webserver(bot)
+
     # Запуск бота
-    print(f"Старт бота")
-    await dp.start_polling(bot)
+    print("Старт бота")
+    try:
+        await dp.start_polling(bot)
+    finally:
+        await runner.cleanup()
 
 if __name__ == "__main__":
     asyncio.run(main())
