@@ -3,6 +3,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
+from webserver import start_webserver
 from config import BOT_TOKEN
 
 from handlers.start import router as start_router
@@ -15,6 +16,7 @@ from middlewares.user_loader import UserLoaderMiddleware
 
 from logger import logger
 
+
 async def main():
     bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher(storage=MemoryStorage())
@@ -26,9 +28,15 @@ async def main():
     dp.message.middleware(UserLoaderMiddleware())
     dp.callback_query.middleware(UserLoaderMiddleware())
 
+    # Запус веб сервера для получения данных с сервера
+    runner = await start_webserver(bot)
+
     # Запуск бота
     print(f"Старт бота")
-    await dp.start_polling(bot)
+    try:
+        await dp.start_polling(bot)
+    finally:
+        await runner.cleanup()
 
 if __name__ == "__main__":
     asyncio.run(main())
