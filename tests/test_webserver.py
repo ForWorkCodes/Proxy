@@ -1,10 +1,10 @@
+from webserver import handle_notify
 import pytest
 from unittest.mock import AsyncMock
 from aiohttp.test_utils import TestClient, TestServer
 from aiohttp import web
-from config import INTERNAL_API_TOKEN
-
-from webserver import start_webserver, handle_notify
+import os
+INTERNAL_API_TOKEN = os.getenv("INTERNAL_API_TOKEN", "test-key")
 
 
 @pytest.mark.asyncio
