@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from aiogram.types import CallbackQuery, Message, User
+from aiogram.types import CallbackQuery, Message, User, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from handlers.settings import (
     my_settings,
@@ -13,6 +13,7 @@ from handlers.settings import (
     disable_sms_notification
 )
 
+
 @pytest.fixture
 def callback_query():
     query = AsyncMock(spec=CallbackQuery)
@@ -24,10 +25,12 @@ def callback_query():
     query.message.answer = AsyncMock()
     return query
 
+
 @pytest.fixture
 def state():
     state = AsyncMock(spec=FSMContext)
     return state
+
 
 @pytest.mark.asyncio
 async def test_my_settings(callback_query, state):
@@ -51,11 +54,12 @@ async def test_my_settings(callback_query, state):
             reply_markup='settings_menu'
         )
 
+
 @pytest.mark.asyncio
 async def test_change_language(callback_query, state):
     with patch('handlers.settings.get_text', new_callable=AsyncMock) as mock_get_text, \
             patch('handlers.settings.safe_delete_message', new_callable=AsyncMock) as mock_safe_delete_message, \
-            patch('handlers.settings.get_language_menu') as mock_get_language_menu:
+            patch('handlers.settings.get_language_menu', new_callable=AsyncMock) as mock_get_language_menu:
         
         mock_get_text.return_value = 'Choose language'
         mock_get_language_menu.return_value = 'language_menu'
@@ -68,6 +72,7 @@ async def test_change_language(callback_query, state):
             text='Choose language',
             reply_markup=mock_get_language_menu.return_value
         )
+
 
 @pytest.mark.asyncio
 async def test_change_language_ru(callback_query, state):
@@ -100,6 +105,7 @@ async def test_change_language_ru(callback_query, state):
             reply_markup='main_menu'
         )
 
+
 @pytest.mark.asyncio
 async def test_change_language_en(callback_query, state):
     with patch("services.user_service.UserService.update_user_language", new_callable=AsyncMock) as mock_update_language, \
@@ -131,23 +137,34 @@ async def test_change_language_en(callback_query, state):
             reply_markup='main_menu'
         )
 
+
 @pytest.mark.asyncio
 async def test_change_notifications(callback_query, state):
-    with patch('handlers.settings.get_text', new_callable=AsyncMock) as mock_get_text, \
-            patch('handlers.settings.safe_delete_message', new_callable=AsyncMock) as mock_safe_delete_message, \
-            patch('handlers.settings.get_notifications_menu', new_callable=AsyncMock) as mock_get_notifications_menu:
-        
-        mock_get_text.return_value = 'Notifications settings'
-        mock_get_notifications_menu.return_value = 'notifications_menu'
+    state.get_data = AsyncMock(return_value={"user": {"notification": False}})
+    with patch('handlers.settings.get_texts', new_callable=AsyncMock) as mock_get_texts, \
+            patch('handlers.settings.safe_delete_message', new_callable=AsyncMock) as mock_safe_delete_message:
+
+        mock_get_texts.return_value = {
+            "notifications_title": "Notifications settings",
+            "(is_on)": "(on)",
+            "(is_off)": "(off)",
+            "sms_renewal": "SMS Renewal Notifications",
+            "back": "🔙 Back"
+        }
         
         await change_notifications(callback_query, state)
+        expected_markup = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="SMS Renewal Notifications", callback_data="menu_sms_notification")],
+            [InlineKeyboardButton(text="🔙 Back", callback_data="main_menu_btn")]
+        ])
         
         callback_query.answer.assert_called_once()
         mock_safe_delete_message.assert_called_once_with(callback_query)
         callback_query.message.answer.assert_called_once_with(
-            text='Notifications settings',
-            reply_markup='notifications_menu'
+            text="Notifications settings (off)",
+            reply_markup=expected_markup
         )
+
 
 @pytest.mark.asyncio
 async def test_menu_sms_notification(callback_query, state):
@@ -166,6 +183,7 @@ async def test_menu_sms_notification(callback_query, state):
             text='SMS notification settings',
             reply_markup='sms_menu'
         )
+
 
 @pytest.mark.asyncio
 async def test_enable_sms_notification(callback_query, state):
@@ -190,6 +208,7 @@ async def test_enable_sms_notification(callback_query, state):
             reply_markup='main_menu'
         )
 
+
 @pytest.mark.asyncio
 async def test_disable_sms_notification(callback_query, state):
     with patch('handlers.settings.get_texts', new_callable=AsyncMock) as mock_get_texts, \
@@ -211,4 +230,4 @@ async def test_disable_sms_notification(callback_query, state):
         callback_query.message.answer.assert_any_call(
             text='Main menu',
             reply_markup='main_menu'
-        ) 
+        )
