@@ -54,17 +54,20 @@ async def get_settings_menu(state: FSMContext):
     ])
 
 
-def get_language_menu():
+async def get_language_menu(state: FSMContext):
+    texts = await get_texts(state)
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="Русский", callback_data="change_language_ru")],
-        [InlineKeyboardButton(text="English", callback_data="change_language_en")]
+        [InlineKeyboardButton(text="English", callback_data="change_language_en")],
+        [InlineKeyboardButton(text=texts["back"], callback_data="main_menu_btn")],
     ])
 
 
 async def get_notifications_menu(state: FSMContext):
     texts = await get_texts(state)
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=texts["sms_renewal"], callback_data="menu_sms_notification")]
+        [InlineKeyboardButton(text=texts["sms_renewal"], callback_data="menu_sms_notification")],
+        [InlineKeyboardButton(text=texts["back"], callback_data="main_menu_btn")],
     ])
 
 
@@ -72,7 +75,8 @@ async def get_menu_sms_notification(state: FSMContext):
     texts = await get_texts(state)
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=texts["Yes"], callback_data="enable_sms_notification")],
-        [InlineKeyboardButton(text=texts["No"], callback_data="disable_sms_notification")]
+        [InlineKeyboardButton(text=texts["No"], callback_data="disable_sms_notification")],
+        [InlineKeyboardButton(text=texts["back"], callback_data="main_menu_btn")],
     ])
 
 
@@ -107,8 +111,7 @@ async def download_proxies_keyboard(state: FSMContext):
     texts = await get_texts(state)
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=".csv", callback_data="download_proxies_csv")],
-        [InlineKeyboardButton(text=".xls", callback_data="download_proxies_xls")],
-        [InlineKeyboardButton(text=texts["back"], callback_data="main_menu_btn")],
+        [InlineKeyboardButton(text=".xls", callback_data="download_proxies_xls")]
     ])
 
 
@@ -181,6 +184,7 @@ async def confirm_proxy_keyboard(state: FSMContext):
     texts = await get_texts(state)
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=texts["Yes, pay"], callback_data="pay_yes")],
+        [InlineKeyboardButton(text=texts["Yes, pay (prolog)"], callback_data="pay_yes_prolog")],
         [InlineKeyboardButton(text=texts["Cancel"], callback_data="pay_cancel")],
     ])
 

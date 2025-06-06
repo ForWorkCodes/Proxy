@@ -24,9 +24,10 @@ async def my_settings(callback: CallbackQuery, state: FSMContext) -> None:
 @router.callback_query(F.data == "change_language")
 async def change_language(callback: CallbackQuery, state: FSMContext) -> None:
     text = await get_text(state, 'choose_language')
+    menu = await get_language_menu(state)
     await callback.answer()
     await safe_delete_message(callback)
-    await callback.message.answer(text=text, reply_markup=get_language_menu())
+    await callback.message.answer(text=text, reply_markup=menu)
 
 
 @router.callback_query(F.data == "change_language_ru")
@@ -55,7 +56,15 @@ async def change_language_en(callback: CallbackQuery, state: FSMContext) -> None
 
 @router.callback_query(F.data == "change_notifications")
 async def change_notifications(callback: CallbackQuery, state: FSMContext) -> None:
-    text = await get_text(state, 'notifications_title')
+    texts = await get_texts(state)
+    text = texts["notifications_title"]
+
+    data = await state.get_data()
+    if data["user"]["notification"]:
+        text += " " + texts["(is_on)"]
+    else:
+        text += " " + texts["(is_off)"]
+
     notifications_menu = await get_notifications_menu(state)
     await callback.answer()
     await safe_delete_message(callback)

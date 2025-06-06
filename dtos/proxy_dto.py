@@ -42,6 +42,7 @@ class ProxyProcessBuyingDTO(BaseModel):
     country: str = Field(..., min_length=2, max_length=3)
     days: int = Field(..., ge=1, le=180)
     quantity: int = Field(..., gt=0)
+    auto_prolong: bool
 
 
 class ProxyItem(BaseModel):
@@ -57,6 +58,7 @@ class ProxyItem(BaseModel):
     unixtime_end: int
     descr: Optional[str] = None
     active: bool
+    auto_prolong: bool | None = None
 
 
 class ProxyProcessBuyingResponse(BaseModel):

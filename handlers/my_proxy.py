@@ -17,37 +17,37 @@ async def my_proxy(callback: CallbackQuery, state: FSMContext) -> None:
     service = ProxyAPIClient()
     response = await service.get_my_list_proxy(callback.from_user.id)
     texts = await get_texts(state)
+    empty_menu = await empty_proxy_menu(state)
+    text = texts['my_proxy']
 
     if not response.success:
         if response.status_code == 2001:
-            empty_menu = await empty_proxy_menu(state)
-            await callback.message.answer(text=texts['empty_proxy_text'], reply_markup=empty_menu)
+            text = texts['empty_proxy_text']
+
         else:
-            keyboard = await get_main_menu(state)
-            await callback.message.answer(text=texts['api_error'], reply_markup=keyboard)
+            text = texts['api_error']
 
     my_proxy_num = len(response.list)
     await callback.message.answer(texts["you_have_proxy_count"] + ": " + str(my_proxy_num))
 
     if my_proxy_num > 0:
-        if my_proxy_num > 10:
-            download_menu = await download_proxies_keyboard(state)
-            await callback.message.answer(texts['download_proxies'], reply_markup=download_menu)
-        else:
-            for idx, proxy in enumerate(response.list, start=1):
-                country = texts["country_" + proxy.country]
-                date_end = proxy.date_end.strftime("%d.%m.%Y %H:%M") if proxy.date_end else "—"
-                proxy_text = (
-                    f"<b>IP: </b>{proxy.host}:{proxy.port}\n"
-                    f"<b>{texts['type']}: </b>{proxy.type.upper()}\n"
-                    f"<b>{texts['version']}: </b>{proxy.version}\n"
-                    f"<b>{texts['country']}: </b>{country}\n"
-                    f"<b>{texts['time_to']}: </b>{date_end}"
-                )
-                await callback.message.answer(proxy_text, parse_mode="HTML")
+        download_menu = await download_proxies_keyboard(state)
+        empty_menu.inline_keyboard = download_menu.inline_keyboard + empty_menu.inline_keyboard
 
-            menu = await get_main_menu(state)
-            await callback.message.answer(text=texts['menu_title'], reply_markup=menu)
+        for idx, proxy in enumerate(response.list, start=1):
+            country = texts["country_" + proxy.country]
+            date_end = proxy.date_end.strftime("%d.%m.%Y %H:%M") if proxy.date_end else "—"
+            proxy_text = (
+                f"<b>IP: </b>{proxy.host}:{proxy.port}\n"
+                f"<b>{texts['type']}: </b>{proxy.type.upper()}\n"
+                f"<b>{texts['version']}: </b>{proxy.version}\n"
+                f"<b>{texts['country']}: </b>{country}\n"
+                f"<b>{texts['time_to']}: </b>{date_end}\n"
+                f"<b>{texts['is_prolog']}: </b>{texts['Yes'] if proxy.auto_prolong else texts['No']}"
+            )
+            await callback.message.answer(proxy_text, parse_mode="HTML")
+
+    await callback.message.answer(text=text, reply_markup=empty_menu)
 
 
 @router.callback_query(F.data == "test_add_proxy")

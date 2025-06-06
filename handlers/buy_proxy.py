@@ -285,7 +285,8 @@ async def confirm_payment(callback: CallbackQuery, state: FSMContext):
             type=data.get("proxy_type"),
             country=data.get("country"),
             days=data.get("days"),
-            quantity=data.get("quantity")
+            quantity=data.get("quantity"),
+            auto_prolong=False
         )
     except KeyError as e:
         logger.error(f"Missing field: {e}")
@@ -330,7 +331,85 @@ async def confirm_payment(callback: CallbackQuery, state: FSMContext):
                 f"<b>{texts['type']}: </b>{proxy.type.upper()}\n"
                 f"<b>{texts['version']}: </b>{proxy.version}\n"
                 f"<b>{texts['country']}: </b>{country}\n"
-                f"<b>{texts['time_to']}: </b>{date_end}"
+                f"<b>{texts['time_to']}: </b>{date_end}\n"
+                f"<b>{texts['is_prolog']}: </b>{texts['No']}"
+            )
+            await callback.message.answer(proxy_text, parse_mode="HTML")
+
+        menu = await get_main_menu(state)
+        await callback.message.answer(text, reply_markup=menu)
+        await callback.answer()
+
+
+@router.callback_query(BuyProxy.ConfirmAvailability, F.data == "pay_yes_prolog")
+async def confirm_payment(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(None)
+    await safe_delete_message(callback)
+    await state.set_state(BuyProxy.PaymentProcess)
+
+    texts = await get_texts(state)
+
+    text = texts["deducting_from_balance"]
+    msg = await callback.message.answer(text)
+
+    service = ProxyAPIClient()
+    data = await state.get_data()
+
+    try:
+        dto = ProxyProcessBuyingDTO(
+            telegram_id=str(callback.from_user.id),
+            version=data.get("proxy_version"),
+            type=data.get("proxy_type"),
+            country=data.get("country"),
+            days=data.get("days"),
+            quantity=data.get("quantity"),
+            auto_prolong=True
+        )
+    except KeyError as e:
+        logger.error(f"Missing field: {e}")
+        error_text = texts["api_error"]
+        back_keyboard = await make_back_keyboard(state)
+
+        await safe_delete_message(msg)
+        await callback.message.answer(error_text, reply_markup=back_keyboard)
+        return
+    except ValidationError as e:
+        logger.warning(f"Validation failed: {e}")
+        error_text = texts["wrong_quantity"]
+
+        await safe_delete_message(msg)
+        await callback.message.answer(error_text)
+        return
+
+    response = await service.process_buying_proxy(dto)
+    await safe_delete_message(msg)
+
+    if not response.success:
+        if response.status_code == 4001:
+            error_text = texts["no_money_purshare?"]
+            keyboard = await get_balance_menu(state)
+        elif response.status_code == 210:
+            error_text = texts["error_days"]
+            keyboard = await get_main_menu(state)
+        else:
+            error_text = texts["api_error"]
+            keyboard = await get_main_menu(state)
+
+        await callback.message.answer(error_text, reply_markup=keyboard)
+    else:
+        text = texts["purchase_success"]
+        await callback.message.answer(text)
+
+        for idx, proxy in enumerate(response.list, start=1):
+            country = texts["country_" + proxy.country]
+            date_end = proxy.date_end.strftime("%d.%m.%Y %H:%M") if proxy.date_end else "—"
+            proxy_text = (
+                f"<b>IP: </b>{proxy.host}:{proxy.port}\n"
+                f"<b>{texts['type']}: </b>{proxy.type.upper()}\n"
+                f"<b>{texts['version']}: </b>{proxy.version}\n"
+                f"<b>{texts['country']}: </b>{country}\n"
+                f"<b>{texts['time_to']}: </b>{date_end}\n"
+                f"<b>{texts['is_prolog']}: </b>{texts['Yes']}"
             )
             await callback.message.answer(proxy_text, parse_mode="HTML")
 
