@@ -43,6 +43,7 @@ texts = {
         "empty_proxy_text": "У вас нет прокси",
         "you_have_proxy_count": "У тебя есть прокси в количестве",
         "download_proxies": "Скачать",
+        "how_choose_proxy": "Как выбрать?",
         "proxy_type_not_selected": "proxy_type не задан. Сначала выберите версию прокси.",
         "proxy_type_not_selected_error": "proxy_type должен быть установлен перед выбором страны",
         "wrong_quantity": "❌ Введите корректное количество (целое число больше нуля).",
@@ -149,6 +150,35 @@ texts = {
         "quantity": "Кол-во",
         "days": "Дней",
         "price": "Цена",
+        "how_choose_proxy_text": (
+            "<b>Как выбрать прокси</b>\n\n"
+            "<b>IPv6</b>\n"
+            "• Подходят только для сайтов с поддержкой IPv6.\n"
+            "• Обычно дешевле, чем IPv4.\n"
+            "• Выдаются в одни руки.\n\n"
+            "<b>IPv4</b>\n"
+            "• Подходят для всех сайтов и сервисов.\n"
+            "• Универсальный и надёжный вариант.\n"
+            "• Выдаются в одни руки.\n\n"
+            "<b>IPv4 Shared</b>\n"
+            "• Подходят для всех сайтов.\n"
+            "• Один IP делят до 3 человек.\n"
+            "• Дешевле, но возможны ограничения при высокой нагрузке."
+        ),
+        "faq_text": (
+            "1. <b>Как купить</b> → Выберите страну и тип прокси, оплатите прямо в боте, доступ придет сразу.\n\n"
+            "2. <b>Что лучше выбрать: IPv4 или IPv6</b> → IPv4 стабильнее и подходит для большинства сервисов, "
+            "IPv6 дешевле и отлично работает там, где он поддерживается. Уточнять стоит на сервисе, который требует прокси.\n\n"
+            "3. <b>На сколько выдается прокси</b> → Минимальный срок — 30 дней. Можно продлить в пару кликов.\n\n"
+            "4. <b>Как продлить</b> → В разделе “Мои прокси” нажмите “Продлить”, выберите срок и оплатите.\n\n"
+            "5. <b>Можно ли поменять страну</b> → Да, но только купив новый прокси. Обмен не предусмотрен.\n\n"
+            "6. <b>Что делать, если прокси не работает</b> → Проверьте логин/пароль и настройки. Если ошибка повторяется — пишите в поддержку.\n\n"
+            "7. <b>Сколько можно использовать на одном устройстве</b> → Один прокси можно подключить к неограниченному количеству устройств/ПО, "
+            "параллельные подключения не гарантируются.\n\n"
+            "8. <b>Анонимность</b> → Прокси полностью скрывает ваш реальный IP, но ответственность за действия несет пользователь.\n\n"
+            "9. <b>Оплата</b> → Принимаем крипту. Все автоматизировано.\n\n"
+            "10. <b>Вы даёте замену</b> → Да, если прокси “умирает” раньше срока, мы бесплатно заменим."
+        ),
     },
     "en": {
         "Yes": "Yes",
@@ -192,6 +222,7 @@ texts = {
         "empty_proxy_text": "You have no proxies",
         "you_have_proxy_count": "You have proxies in the amount of",
         "download_proxies": "Download",
+        "how_choose_proxy": "How to choose?",
         "proxy_type_not_selected": "proxy_type not selected. First select proxy type.",
         "proxy_type_not_selected_error": "proxy_type must be set before selecting a country",
         "wrong_quantity": "❌ Enter a valid quantity (a positive integer).",
@@ -298,6 +329,35 @@ texts = {
         "quantity": "Quantity",
         "days": "Days",
         "price": "Price",
+        "how_choose_proxy_text": (
+            "<b>How to choose a proxy</b>\n\n"
+            "<b>IPv6</b>\n"
+            "• Suitable only for websites that support IPv6.\n"
+            "• Usually cheaper than IPv4.\n"
+            "• Issued individually (not shared).\n\n"
+            "<b>IPv4</b>\n"
+            "• Works with all websites and services.\n"
+            "• A reliable and universal option.\n"
+            "• Issued individually (not shared).\n\n"
+            "<b>IPv4 Shared</b>\n"
+            "• Works with all websites.\n"
+            "• One IP address is shared by up to 3 people.\n"
+            "• Cheaper, but may have limitations under heavy use."
+        ),
+        "faq_text": (
+            "1. <b>How to buy</b> → Choose the country and proxy type, pay directly in the bot, and access will be provided instantly.\n\n"
+            "2. <b>Which is better: IPv4 or IPv6</b> → IPv4 is more stable and works for most services, "
+            "IPv6 is cheaper and works perfectly where supported. Always check the service that requires the proxy.\n\n"
+            "3. <b>Proxy validity</b> → Minimum period is 30 days. You can extend it in just a few clicks.\n\n"
+            "4. <b>How to renew</b> → In the “My Proxies” section, click “Renew”, choose the period and pay.\n\n"
+            "5. <b>Can I change the country</b> → Yes, but only by purchasing a new proxy. Exchange is not provided.\n\n"
+            "6. <b>What to do if the proxy doesn’t work</b> → Check your login/password and settings. If the issue repeats, contact support.\n\n"
+            "7. <b>How many devices can I use it on</b> → One proxy can be connected to an unlimited number of devices/apps, "
+            "but simultaneous parallel connections are not guaranteed.\n\n"
+            "8. <b>Anonymity</b> → Proxies fully hide your real IP, but responsibility for actions lies with the user.\n\n"
+            "9. <b>Payment</b> → We accept crypto. Everything is automated.\n\n"
+            "10. <b>Do you provide replacements</b> → Yes, if a proxy “dies” before its expiration date, we will replace it for free."
+        ),
     }
 }
 

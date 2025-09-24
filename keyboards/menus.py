@@ -40,6 +40,7 @@ async def get_main_menu(state: FSMContext):
         [InlineKeyboardButton(text=texts['my_proxy'], callback_data="my_proxy")],
         [InlineKeyboardButton(text=texts['balance'], callback_data="my_balance")],
         [InlineKeyboardButton(text=texts['checker'], callback_data="checker")],
+        [InlineKeyboardButton(text="FAQ", callback_data="faq")],
         [InlineKeyboardButton(text=texts['settings'], callback_data="my_settings")],
     ])
 
@@ -122,6 +123,7 @@ async def proxy_type_keyboard(state: FSMContext):
         [InlineKeyboardButton(text="IPv6", callback_data="type_ipv6")],
         [InlineKeyboardButton(text="IPv4", callback_data="type_ipv4")],
         [InlineKeyboardButton(text="IPv4 Shared", callback_data="type_ipv4shared")],
+        [InlineKeyboardButton(text=texts["how_choose_proxy"], callback_data="type_howchoose")],
         [InlineKeyboardButton(text=texts["back"], callback_data="type_back")],
     ])
 

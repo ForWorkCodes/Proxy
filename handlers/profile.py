@@ -96,3 +96,14 @@ async def select_amount(callback: CallbackQuery, state: FSMContext):
 
     main_menu = await get_main_menu(state)
     await callback.message.answer(text=texts['menu_title'], reply_markup=main_menu)
+
+
+@router.callback_query(F.data == "faq")
+async def my_balance(callback: CallbackQuery, state: FSMContext) -> None:
+    texts = await get_texts(state)
+
+    main_menu = await get_main_menu(state)
+
+    await callback.answer()
+    await safe_delete_message(callback)
+    await callback.message.answer(text=texts['faq_text'], reply_markup=main_menu)

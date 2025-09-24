@@ -12,6 +12,7 @@ from keyboards.menus import (
 )
 from itertools import islice
 from pydantic import ValidationError
+from services import UserService
 from services.proxy_api_client import ProxyAPIClient
 import logging
 
@@ -27,6 +28,17 @@ router = Router()
 
 @router.callback_query(F.data == "buy_proxy")
 async def buy_proxy(callback: CallbackQuery, state: FSMContext) -> None:
+    user_service = UserService()
+    user = await user_service.get_balance(callback.from_user.id)
+
+    if user["balance"] < 3:
+        await callback.answer()
+        await safe_delete_message(callback)
+        text = await get_text(state, 'no_money_purshare?')
+        menu = await get_balance_menu(state)
+        await callback.message.answer(text, reply_markup=menu)
+        return
+
     await state.set_state(BuyProxy.Type)
     text = await get_text(state, 'select_proxy_type')
     proxy_type_menu = await proxy_type_keyboard(state)
@@ -44,7 +56,15 @@ async def select_type(callback: CallbackQuery, state: FSMContext):
         main_menu = await get_main_menu(state)
         await callback.message.answer(text, reply_markup=main_menu)
         return
-    
+
+    if callback.data == "type_howchoose":
+        await callback.answer()
+        await safe_delete_message(callback)
+        text = await get_text(state, 'how_choose_proxy_text')
+        menu = await proxy_type_keyboard(state)
+        await callback.message.answer(text, reply_markup=menu)
+        return
+
     await state.update_data(proxy_version=callback.data.split("_")[1])
     await state.set_state(BuyProxy.HttpType)
 
