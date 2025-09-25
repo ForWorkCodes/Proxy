@@ -118,6 +118,7 @@ async def select_country(message: Message, state: FSMContext):
     
     country_service = ProxyAPIClient()
     country_dict = await country_service.get_country_dict(state)
+    data = await state.get_data()
 
     # Найти код страны по вводу пользователя
     selected_country_code = None
@@ -154,6 +155,12 @@ async def select_quantity(message: Message, state: FSMContext):
         return
 
     quantity_str = message.text.strip()
+    quantity = int(quantity_str)
+    data = await state.get_data()
+    proxy_version = data.get("proxy_version")
+    need_quantity = 7
+    if proxy_version == "ipv6":
+        need_quantity = 3
 
     # Проверяем, что это число и > 0
     if not quantity_str.isdigit() or int(quantity_str) <= 0:
@@ -161,9 +168,6 @@ async def select_quantity(message: Message, state: FSMContext):
         retry_text = await get_text(state, 'enter_proxy_quantity')
         await message.answer(f"{error_text}\n\n{retry_text}")
         return
-
-    quantity = int(quantity_str)
-    data = await state.get_data()
 
     try:
         dto = ProxyAvailabilityDTO(
@@ -206,7 +210,13 @@ async def select_quantity(message: Message, state: FSMContext):
     await state.update_data(quantity=quantity)
     await state.set_state(BuyProxy.SelectPeriod)
 
-    text = await get_text(state, 'select_period_days:')
+    if need_quantity == 3:
+        text_q = await get_text(state, '1_min_quant')
+    else:
+        text_q = await get_text(state, '2_min_quant')
+
+    text = await get_text(state, 'select_period_days')
+    text += " (" + str(need_quantity) + " " + text_q + "):"
     back_keyboard = await make_back_keyboard(state)
     await message.answer(text, reply_markup=back_keyboard)
 
@@ -223,16 +233,19 @@ async def select_period(message: Message, state: FSMContext):
 
     days_str = message.text.strip()
     days = int(days_str)
+    data = await state.get_data()
+    need_quantity = 7
+    proxy_version = data.get("proxy_version")
+    if proxy_version == "ipv6":
+        need_quantity = 3
 
-    if days < 1 or days > 180:
+    if days < need_quantity or days > 90:
         error_text = await get_text(state, 'Error')
-        retry_text = await get_text(state, 'select_period_days:')
+        retry_text = await get_text(state, 'select_period_days')
         await message.answer(f"{error_text}\n\n{retry_text}")
         return
 
     await state.update_data(days=days)
-
-    data = await state.get_data()
 
     try:
         dto = ProxyGetPriceDTO(
@@ -441,6 +454,7 @@ async def confirm_payment(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(BuyProxy.ConfirmAvailability, F.data == "pay_cancel")
 async def cancel_payment(callback: CallbackQuery, state: FSMContext):
     await state.set_state(None)
+    await safe_delete_message(callback)
     text = await get_text(state, 'purchase_cancelled')
     menu = await get_main_menu(state)
     await callback.message.answer(text, reply_markup=menu)
