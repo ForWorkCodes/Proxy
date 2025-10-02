@@ -43,6 +43,8 @@ class ProxyProcessBuyingDTO(BaseModel):
     days: int = Field(..., ge=1, le=180)
     quantity: int = Field(..., gt=0)
     auto_prolong: bool
+    login_proxy: Optional[str] = None
+    pass_proxy: Optional[str] = None
 
 
 class ProxyItem(BaseModel):
@@ -59,6 +61,8 @@ class ProxyItem(BaseModel):
     descr: Optional[str] = None
     active: bool
     auto_prolong: bool | None = None
+    login_proxy: Optional[str] = None
+    pass_proxy: Optional[str] = None
 
 
 class ProxyProcessBuyingResponse(BaseModel):

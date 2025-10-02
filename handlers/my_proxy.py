@@ -42,6 +42,8 @@ async def my_proxy(callback: CallbackQuery, state: FSMContext) -> None:
                 f"<b>{texts['type']}: </b>{proxy.type.upper()}\n"
                 f"<b>{texts['version']}: </b>{proxy.version}\n"
                 f"<b>{texts['country']}: </b>{country}\n"
+                f"<b>{texts['login']}: </b>{proxy.login_proxy}\n"
+                f"<b>{texts['password']}: </b>{proxy.pass_proxy}\n"
                 f"<b>{texts['time_to']}: </b>{date_end}\n"
                 f"<b>{texts['is_prolog']}: </b>{texts['Yes'] if proxy.auto_prolong else texts['No']}"
             )
