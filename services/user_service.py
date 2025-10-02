@@ -85,7 +85,7 @@ class UserService:
                 "success": False
             }
 
-        amount = round(float(user["amount"]), 1)
+        amount = round(float(user["amount"]), 2)
         return {
             "success": True,
             "balance": amount,
