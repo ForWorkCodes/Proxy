@@ -216,19 +216,19 @@ async def top_up_amount_list(state: FSMContext):
 
     return InlineKeyboardMarkup(inline_keyboard=[
         [
-            InlineKeyboardButton(text="100 " + texts["rub_symbol"], callback_data="amount_100.0"),
-            InlineKeyboardButton(text="200 " + texts["rub_symbol"], callback_data="amount_200.0")
+            InlineKeyboardButton(text="5 " + texts["usd_symbol"], callback_data="amount_5.0"),
+            InlineKeyboardButton(text="10 " + texts["usd_symbol"], callback_data="amount_10.0")
         ],
         [
-            InlineKeyboardButton(text="400 " + texts["rub_symbol"], callback_data="amount_400.0"),
-            InlineKeyboardButton(text="500 " + texts["rub_symbol"], callback_data="amount_500.0")
+            InlineKeyboardButton(text="15 " + texts["usd_symbol"], callback_data="amount_15.0"),
+            InlineKeyboardButton(text="20 " + texts["usd_symbol"], callback_data="amount_20.0")
         ],
         [
-            InlineKeyboardButton(text="1000 " + texts["rub_symbol"], callback_data="amount_1000.0"),
-            InlineKeyboardButton(text="1500 " + texts["rub_symbol"], callback_data="amount_1500.0")
+            InlineKeyboardButton(text="50 " + texts["usd_symbol"], callback_data="amount_50.0"),
+            InlineKeyboardButton(text="70 " + texts["usd_symbol"], callback_data="amount_70.0")
         ],
         [
-            InlineKeyboardButton(text="2000 " + texts["rub_symbol"], callback_data="amount_2000.0"),
+            InlineKeyboardButton(text="100 " + texts["usd_symbol"], callback_data="amount_100.0"),
             InlineKeyboardButton(text=texts["back"], callback_data="amount_back")
         ]
     ])

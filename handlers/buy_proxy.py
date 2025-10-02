@@ -479,7 +479,7 @@ async def get_proxy_summary(state: FSMContext) -> str:
     if "days" in data:
         lines.append(f"{texts['days']}: <b>{data['days']}</b>")
     if "price" in data:
-        lines.append(f"{texts['price']}: <b>{data['price']} RUB</b>")
+        lines.append(f"{texts['price']}: <b>{data['price']}$</b>")
 
     if not lines:
         return no_choose

@@ -23,7 +23,7 @@ async def my_balance(callback: CallbackQuery, state: FSMContext) -> None:
     if not user["success"]:
         balance_text = texts["api_error"]
     else:
-        balance_text = texts["current_balance"] + ": " + str(user["balance"]) + " " + user["currency"]
+        balance_text = texts["current_balance"] + ": " + str(user["balance"]) + user["currency"]
 
     await callback.answer()
     await safe_delete_message(callback)
@@ -90,7 +90,7 @@ async def select_amount(callback: CallbackQuery, state: FSMContext):
     else:
         link = response["topup_url"]
         if link:
-            await callback.message.answer(f"{texts['link_pay']} ({amount} {texts['rub_symbol']}): {link}")
+            await callback.message.answer(f"{texts['link_pay']} ({amount}{texts['usd_symbol']}): {link}")
         else:
             await callback.message.answer(texts['Error'])
 

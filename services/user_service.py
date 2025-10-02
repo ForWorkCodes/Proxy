@@ -89,5 +89,5 @@ class UserService:
         return {
             "success": True,
             "balance": amount,
-            "currency": "RUB"
+            "currency": "$"
         }
