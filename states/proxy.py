@@ -15,6 +15,10 @@ class CheckerProxy(StatesGroup):
     Choose = State()
 
 
+class CancelProxy(StatesGroup):
+    Choose = State()
+
+
 class TopUp(StatesGroup):
     TypeTopUp = State()
     AmountTopUp = State()
