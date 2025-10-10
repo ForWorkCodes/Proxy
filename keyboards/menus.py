@@ -112,7 +112,8 @@ async def download_proxies_keyboard(state: FSMContext):
     texts = await get_texts(state)
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=".csv", callback_data="download_proxies_csv")],
-        [InlineKeyboardButton(text=".xls", callback_data="download_proxies_xls")]
+        [InlineKeyboardButton(text=".xls", callback_data="download_proxies_xls")],
+        [InlineKeyboardButton(text=texts["cancel_proxy"], callback_data="cancel_proxy")]
     ])
 
 
