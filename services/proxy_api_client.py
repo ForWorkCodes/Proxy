@@ -217,7 +217,7 @@ class ProxyAPIClient:
                 "error": f"Request failed: {e}"
             }
 
-    async def delete_proxy(self, telegram_id: int, address: str):
+    async def cancel_proxy(self, telegram_id: int, address: str):
         if not ADDRESS_REGEX.match(address):
             return {
                 "success": False,
@@ -228,11 +228,16 @@ class ProxyAPIClient:
         try:
             async with ClientSession(headers=self.headers) as session:
                 async with session.post(
-                        f"{self.base_url}/delete-proxy",
+                        f"{self.base_url}/cancel-proxy",
                         json={"telegram_id": str(telegram_id), "address": address}
                 ) as response:
                     if response.status == 200:
-                        return await response.json()
+                        result = await response.json()
+                        return {
+                            "success": result["success"],
+                            "status_code": result["status_code"],
+                            "error": result["error"]
+                        }
                     else:
                         return {
                             "success": False,

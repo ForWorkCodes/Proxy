@@ -122,7 +122,7 @@ async def cancel_proxy_choose(message: Message, state: FSMContext) -> None:
         return
 
     proxy_api_client = ProxyAPIClient()
-    response = await proxy_api_client.delete_proxy(message.from_user.id, selected)
+    response = await proxy_api_client.cancel_proxy(message.from_user.id, selected)
 
     if response.get("success"):
         updated_proxy_list = [
@@ -131,7 +131,7 @@ async def cancel_proxy_choose(message: Message, state: FSMContext) -> None:
         ]
         await state.update_data(proxy_list=updated_proxy_list)
 
-        success_text = texts["proxy_deleted"].format(proxy=selected)
+        success_text = texts["proxy_canceled"].format(proxy=selected)
         await message.answer(text=success_text)
 
         if not updated_proxy_list:
@@ -144,7 +144,7 @@ async def cancel_proxy_choose(message: Message, state: FSMContext) -> None:
         visible_proxies = proxy_list[:20]
         keyboard = await proxy_checker_list(state, visible_proxies)
     else:
-        error_text = response.get("error") or texts["proxy_delete_failed"]
+        error_text = response.get("error") or texts["proxy_cancel_failed"]
         await message.answer(text=error_text)
 
     await message.answer(text=texts["choose_proxy_to_cancel"], reply_markup=keyboard)
