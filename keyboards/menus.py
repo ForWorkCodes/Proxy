@@ -108,13 +108,33 @@ async def empty_proxy_menu(state: FSMContext):
     ])
 
 
-async def download_proxies_keyboard(state: FSMContext):
+async def download_proxies_keyboard(
+    state: FSMContext,
+    *,
+    can_disable_auto_prolong: bool,
+    can_enable_auto_prolong: bool,
+) -> InlineKeyboardMarkup:
     texts = await get_texts(state)
-    return InlineKeyboardMarkup(inline_keyboard=[
+    inline_keyboard = [
         [InlineKeyboardButton(text=".csv", callback_data="download_proxies_csv")],
         [InlineKeyboardButton(text=".xls", callback_data="download_proxies_xls")],
-        [InlineKeyboardButton(text=texts["cancel_proxy"], callback_data="cancel_proxy")]
-    ])
+    ]
+
+    if can_disable_auto_prolong:
+        inline_keyboard.append(
+            [InlineKeyboardButton(text=texts["cancel_proxy"], callback_data="cancel_proxy")]
+        )
+
+    if can_enable_auto_prolong:
+        inline_keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text=texts["enable_auto_prolong"], callback_data="enable_auto_prolong"
+                )
+            ]
+        )
+
+    return InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
 
 
 # Клавиатуры для выбора типа прокси

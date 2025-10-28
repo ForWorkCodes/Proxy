@@ -19,6 +19,10 @@ class CancelProxy(StatesGroup):
     Choose = State()
 
 
+class EnableAutoProlong(StatesGroup):
+    Choose = State()
+
+
 class TopUp(StatesGroup):
     TypeTopUp = State()
     AmountTopUp = State()
