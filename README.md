@@ -16,6 +16,13 @@ BOT_TOKEN=your_bot_token_here
 4. Запусти бота:
 python main.py
 
+## 🔔 Server notifications
+
+The bot starts a lightweight HTTP server (port `8081` by default) that allows
+your backend to push messages to users. See
+[`docs/server_notifications.md`](docs/server_notifications.md) for the payload
+schema and integration details.
+
 ## ⚙️ Требования
 
 - Python 3.12+
