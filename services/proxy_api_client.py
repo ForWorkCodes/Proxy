@@ -251,6 +251,40 @@ class ProxyAPIClient:
                 "error": f"Request failed: {e}"
             }
 
+    async def enable_auto_prolong(self, telegram_id: int, address: str):
+        if not ADDRESS_REGEX.match(address):
+            return {
+                "success": False,
+                "status_code": 400,
+                "error": "Invalid address format. Expected IP:PORT"
+            }
+
+        try:
+            async with ClientSession(headers=self.headers) as session:
+                async with session.post(
+                        f"{self.base_url}/enable-proxy",
+                        json={"telegram_id": str(telegram_id), "address": address}
+                ) as response:
+                    if response.status == 200:
+                        result = await response.json()
+                        return {
+                            "success": result["success"],
+                            "status_code": result["status_code"],
+                            "error": result["error"]
+                        }
+                    else:
+                        return {
+                            "success": False,
+                            "status_code": response.status,
+                            "error": "Server returned error",
+                        }
+        except ClientError as e:
+            return {
+                "success": False,
+                "status_code": 500,
+                "error": f"Request failed: {e}"
+            }
+
     async def get_link_my_proxy(self, telegram_id: int, file_type: str):
         if file_type == "csv":
             file = "csv"
