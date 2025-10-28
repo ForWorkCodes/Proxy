@@ -77,16 +77,17 @@ async def cancel_proxy(callback: CallbackQuery, state: FSMContext) -> None:
 
         return
 
-    proxy_list_raw = [proxy.model_dump() for proxy in response.list]
+    auto_prolong_proxies = [proxy for proxy in response.list if proxy.auto_prolong]
+    proxy_list_raw = [proxy.model_dump() for proxy in auto_prolong_proxies]
     await state.update_data(proxy_list=proxy_list_raw)
 
     if not proxy_list_raw:
         await state.set_state(None)
         empty_menu = await empty_proxy_menu(state)
-        await callback.message.answer(text=texts['empty_proxy_text'], reply_markup=empty_menu)
+        await callback.message.answer(text=texts['no_auto_prolong_proxies'], reply_markup=empty_menu)
         return
 
-    visible_proxies = response.list[:20]
+    visible_proxies = auto_prolong_proxies[:20]
     keyboard = await proxy_checker_list(state, visible_proxies)
 
     await callback.message.answer(text=texts['choose_proxy_to_cancel'], reply_markup=keyboard)
