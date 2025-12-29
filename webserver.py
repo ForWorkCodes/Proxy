@@ -24,6 +24,8 @@ def _build_notification_text(payload: NotificationData, locale_texts: Dict[str, 
         extras = payload.extras["data"]
         if extras["reason"] == "notification_delivery_failed":
             base_line += " Ошибка доставки сообщения " + extras["notification_type"] + ". Пользователю " + str(extras["user_id"])
+        if extras["reason"] == "proxy_purchase_insufficient_funds":
+            base_line += " Ошибка покупки прокси: " + extras["details"] + ". Пользователю " + str(extras["requested_by"])
 
         return base_line
 
