@@ -19,7 +19,19 @@ def _build_notification_text(payload: NotificationData, locale_texts: Dict[str, 
     template_key = f"notification_{payload.type.value}"
     template = locale_texts.get(template_key)
 
-    if payload.type == NotificationType.proxy_expiring:
+    if payload.type == NotificationType.admin_alert:
+        base_line = template
+        extras = payload.extras["data"]
+        if extras["reason"] == "notification_delivery_failed":
+            base_line += " Ошибка доставки сообщения " + extras["notification_type"] + ". Пользователю " + str(extras["user_id"])
+
+        return base_line
+
+    if payload.type == NotificationType.balance_low:
+        base_line = template
+        return base_line
+
+    if payload.type == NotificationType.proxy_expiring or payload.type == NotificationType.proxy_expired:
         base_line = payload.message or template
         if not base_line:
             raise ValueError("Missing message template for proxy_expiring notification")
