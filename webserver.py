@@ -7,7 +7,7 @@ from typing import Dict
 from aiohttp import web
 
 from config import INTERNAL_API_TOKEN
-from data.locales import get_text_by_land
+from data.locales import get_text_by_land, ru_hours_word
 from dtos.notification_dto import IncomingNotification, NotificationData
 from enums.notification_type import NotificationType
 
@@ -42,6 +42,22 @@ def _build_notification_text(payload: NotificationData, locale_texts: Dict[str, 
         if payload.host:
             proxy_label = locale_texts.get("proxy:", "Proxy:")
             parts.append(f"{proxy_label} {payload.host}")
+
+        hours_left = payload.extras.get("hours_left")
+        if hours_left is not None:
+            try:
+                hours_left_int = int(hours_left)
+            except (TypeError, ValueError):
+                hours_left_int = None
+
+            expires_in_text = locale_texts.get("expires_in")
+            if hours_left_int is not None:
+                if payload.language == "ru":
+                    hours_word = ru_hours_word(hours_left_int)
+                    parts.append(expires_in_text.format(hours=hours_left_int, hours_word=hours_word))
+                else:
+                    parts.append(expires_in_text.format(hours=hours_left_int))
+
         return "\n".join(part for part in parts if part).strip()
 
     if payload.message:

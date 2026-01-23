@@ -78,6 +78,7 @@ texts = {
         "proxy_is_active": "Прокси активно",
         "rub_symbol": "₽",
         "usd_symbol": "$",
+        "expires_in": "Закончится через {hours} {hours_word}",
         "notification_proxy_expiring": "Данный прокси скоро закончится",
         "notification_proxy_expired": "Данный прокси закончился",
         "notification_balance_low": "Баланс на исходе. Пополните счет, чтобы сервисы работали без перебоев.",
@@ -275,6 +276,7 @@ texts = {
         "proxy_is_active": "Proxy is active",
         "rub_symbol": "₽",
         "usd_symbol": "$",
+        "expires_in": "Ends in {hours} hours",
         "notification_proxy_expiring": "This proxy will expire soon",
         "notification_proxy_expired": "This proxy are expired",
         "notification_admin_alert": "Warning for admin:",
@@ -413,3 +415,15 @@ async def get_text(state: FSMContext, key: str) -> str:
 
 def get_text_by_land(lang: str):
     return texts.get(lang, texts[DEFAULT_LANG])
+
+
+def ru_hours_word(hours: int) -> str:
+    hours = abs(int(hours))
+    if hours % 100 in (11, 12, 13, 14):
+        return "часов"
+    last = hours % 10
+    if last == 1:
+        return "час"
+    if last in (2, 3, 4):
+        return "часа"
+    return "часов"
