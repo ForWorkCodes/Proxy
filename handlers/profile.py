@@ -1,5 +1,5 @@
 from aiogram import Router, F
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.fsm.context import FSMContext
 from data.locales import get_texts
 from utils.telegram import safe_delete_message
@@ -90,12 +90,42 @@ async def select_amount(callback: CallbackQuery, state: FSMContext):
     else:
         link = response["topup_url"]
         if link:
+            #TODO: add localization
+            #await callback.message.answer(
+            #    text=f"{texts['link_pay']} ({amount}{texts['usd_symbol']}):",
+            #    reply_markup=pay_kb(link, texts)
+            #)
+            #await callback.message.answer("Если открылось внутри Telegram: нажми ⋮ → Open in browser")
             await callback.message.answer(f"{texts['link_pay']} ({amount}{texts['usd_symbol']}): {link}")
+            await callback.message.answer("Чтобы открыть удобнее: зажми ссылку и выбери 'Открыть в'")
         else:
             await callback.message.answer(texts['Error'])
 
-    main_menu = await get_main_menu(state)
-    await callback.message.answer(text=texts['menu_title'], reply_markup=main_menu)
+    #main_menu = await get_main_menu(state)
+    #await callback.message.answer(text=texts['menu_title'], reply_markup=main_menu)
+
+
+def pay_kb(url: str, texts) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text="💳 Пополнить (рекомендуется)",
+                web_app=WebAppInfo(url=url)
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="🌐 Открыть в браузере",
+                url=url
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text=texts['back'],
+                callback_data="main_menu_btn"
+            )
+        ]
+    ])
 
 
 @router.callback_query(F.data == "faq")
