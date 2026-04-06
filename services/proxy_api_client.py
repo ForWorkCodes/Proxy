@@ -157,6 +157,7 @@ class ProxyAPIClient:
 
     async def get_my_list_proxy(self, telegram_id: int) -> ProxyUsersListResponse:
         status_code = 404
+        error = ""
         try:
             async with ClientSession(headers=self.headers) as session:
                 async with session.post(
@@ -177,6 +178,9 @@ class ProxyAPIClient:
                         else:
                             status_code = data.get("status_code")
                             error = data.get("error")
+                    else:
+                        status_code = response.status
+                        error = "Server returned error"
         except ClientError as e:
             error = f"API request failed: {e}"
             logger.error(f"API request failed: {e}")
@@ -341,6 +345,8 @@ class ProxyAPIClient:
             return None
 
     async def get_link_topup(self, telegram_id: int, provider: str, amount: float):
+        status_code = 404
+        error = ""
         try:
             async with ClientSession(headers=self.headers) as session:
                 print({"telegram_id": str(telegram_id), "provider": provider, "amount": amount})

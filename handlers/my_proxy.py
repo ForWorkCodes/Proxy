@@ -46,7 +46,8 @@ async def my_proxy(callback: CallbackQuery, state: FSMContext) -> None:
         empty_menu.inline_keyboard = download_menu.inline_keyboard + empty_menu.inline_keyboard
 
         for idx, proxy in enumerate(response.list, start=1):
-            country = texts["country_" + proxy.country]
+            country_key = f"country_{proxy.country.lower()}" if proxy.country else None
+            country = texts.get(country_key, proxy.country.upper() if proxy.country else "—")
             date_end = proxy.date_end.strftime("%d.%m.%Y %H:%M") if proxy.date_end else "—"
             proxy_text = (
                 f"<b>IP: </b>{proxy.host}:{proxy.port}\n"
